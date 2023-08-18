@@ -1,0 +1,4 @@
+#+title: SFB tabby utils
+
+This repo contains my own utils for parsing tabby input for DataLad catalog, with specific focus on SFB1451.
+Currently, the code is under heavy prototyping as I figure how to best capture the process.

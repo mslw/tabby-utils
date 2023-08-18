@@ -1,0 +1,10 @@
+# place to put stuff temporarily for inspection
+tmp/
+# local cache for (API) requests
+query_cache.sqlite
+# the catalog is temporary and for preview only
+catalog/
+# tabby files come by e-mail but need not be archived here
+inbox/
+# unpacked tabby files go there (for prototyping)
+projects/
