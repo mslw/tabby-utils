@@ -1,0 +1,6 @@
+{
+  "schema": "https://schema.org/",
+  "name": "schema:name",
+  "email": "schema:email",
+  "address": "schema:PostalAddress"
+}
