@@ -127,6 +127,7 @@ cat_context = {
             "identifier": "schema:identifier",
         }
     },
+    "sfbHomepage": "schema:mainEntityOfPage",
     "sfbDataController": "https://w3id.org/dpv#DataController",
 }
 
@@ -165,7 +166,7 @@ meta_item["additional_display"] = [
         "name": "SFB1451-Specific",
         "icon": "fa-solid fa-flask",
         "content": {
-            "homepage": compacted.get("schema:mainEntityOfPage"),
+            "homepage": compacted.get("sfbHomepage"),
             "CRC project": record.get("crc-project"),
             "data controller": compacted.get("sfbDataController"),
             "sample[organism]": record.get("sample[organism]"),
