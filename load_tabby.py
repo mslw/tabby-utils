@@ -131,6 +131,10 @@ cat_context = {
     "sfbDataController": "https://w3id.org/dpv#DataController",
 }
 
+# crc-project, sample[organism], sample[organism-part]
+# data controller
+
+
 # id, version, name
 
 expanded = jsonld.expand(record)
@@ -153,14 +157,14 @@ meta_item["authors"] = process_authors(compacted.get("authors"))
 meta_item["keywords"] = compacted.get("keywords")
 meta_item["funding"] = compacted.get("funding")
 
-# top display <-> properties (but long-ish text spills out on half-screen view)
+# top display (displayed as properties)
 # max items: 5
-
-
-# Some things I don't have good schema definitions for, so I get them from "raw" record by key
-
+# note: long-ish text spills out on half-screen view
+# currently not using
 
 # additional display(s)
+# note: some things I don't have good schema definitions for, so I get them from "raw" record by key
+
 meta_item["additional_display"] = [
     {
         "name": "SFB1451-Specific",
@@ -178,13 +182,18 @@ meta_item["additional_display"] = [
 
 meta_item = {k: v for k, v in meta_item.items() if v is not None}
 
+# display what would be added to the catalog
 pprint(meta_item)
 
-# save the metadata for inspection
-with Path("tmp").joinpath("catalog_entry.json").open("w") as jsfile:
-    json.dump(meta_item, jsfile)
+# save all the intermediate metadata for inspection
+with Path("tmp").joinpath("tabby_record.json").open("w") as jsfile:
+    json.dump(record, jsfile, indent=4)
+with Path("tmp").joinpath("expanded.json").open("w") as jsfile:
+    json.dump(expanded, jsfile, indent=4)
 with Path("tmp").joinpath("compacted.json").open("w") as jsfile:
     json.dump(compacted, jsfile, indent=4)
+with Path("tmp").joinpath("catalog_entry.json").open("w") as jsfile:
+    json.dump(meta_item, jsfile)
 
 # -----
 # The code below is concerned with providing a ready-made catalog rendering for preview
