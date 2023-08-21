@@ -1,6 +1,7 @@
 {
   "bibo": "https://purl.org/ontology/bibo/",
   "obo": "https://purl.obolibrary.org/",
+  "prov": "http://www.w3.org/ns/prov#",
   "schema": "https://schema.org/",
   "dpv": "https://w3id.org/dpv#",
   "author": "schema:author",
@@ -17,5 +18,6 @@
   "name": "schema:name",
   "publication": "schema:creativeWork",
   "title": "schema:title",
+  "used-for": "prov:hadUsage",
   "version": "schema:version"
 }

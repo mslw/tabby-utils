@@ -1,0 +1,6 @@
+{
+  "schema": "https://schema.org/",
+  "title": "schema:title",
+  "url": "schema:url",
+  "description": "schema:description"
+}
