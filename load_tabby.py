@@ -101,6 +101,38 @@ def process_license(license):
     # do the least work, for now
     return {"name": license, "url": license}
 
+def process_publications(publications):
+    """Convert publication to catalog-schema object
+
+    Catalog schema expects title, doi, datePublished,
+    publicationOutlet, & authors. Our tabby spec only makes "citation"
+    required, and allows doi, url, and datePublished (if doi is given,
+    citation becomes optional).
+
+    Best thing we can do in the citation-only case is to squeeze
+    citation into title (big text that's displayed).
+
+    When DOI is given, we can look it up to get all fields, and it's
+    our artistic license whether citation should take precedence or
+    not.
+
+    """
+    if type(publications) is dict:
+        publications = [publications]
+
+    res = []
+    for publication in publications:
+        citation = publication.pop("citation", None)
+
+        if citation is not None:
+            publication["title"] = citation
+            publication["authors"] = []
+
+        # todo: doi lookup
+        res.append(publication)
+
+    return res
+
 
 record = load_tabby(Path("projects/project-a/example-record/dataset@tby-crc1451v0.tsv"),
                     cpaths=[Path.cwd()/"conventions"])
@@ -125,6 +157,14 @@ cat_context = {
         "@context": {
             "name": "schema:funder",
             "identifier": "schema:identifier",
+        }
+    },
+    "publications": {
+        "@id": "schema:creativeWork",
+        "@context": {
+            "doi": "schema:identifier",
+            "datePublished": "schema:datePublished",
+            "citation": "schema:citation",
         }
     },
     "sfbHomepage": "schema:mainEntityOfPage",
@@ -156,6 +196,7 @@ meta_item["doi"] = compacted.get("doi")
 meta_item["authors"] = process_authors(compacted.get("authors"))
 meta_item["keywords"] = compacted.get("keywords")
 meta_item["funding"] = compacted.get("funding")
+meta_item["publications"] = process_publications(compacted.get("publications"))
 
 # top display (displayed as properties)
 # max items: 5

@@ -15,6 +15,7 @@
   "last-updated": "schema:dateModified",
   "license": "schema:license",
   "name": "schema:name",
+  "publication": "schema:creativeWork",
   "title": "schema:title",
   "version": "schema:version"
 }

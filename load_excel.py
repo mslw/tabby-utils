@@ -20,10 +20,12 @@ def get_dirpath_equivalent(fpath):
 def affix_convention(fpath):
     """Add convention to file path, based on our knowledge"""
     conventions = {
-        "files": "@tby-ds1",
-        "dataset": "@tby-sd1",
-        "authors": "@tby-sd1",
+        "dataset": "@tby-crc1451v0",
         "funding": "@tby-crc1451v0",
+        "publications": "@tby-crc1451v0",
+        "data-controller": "@tby-crc1451v0",
+        "authors": "@tby-sd1",
+        "files": "@tby-ds1",
     }
 
     _, sheet = get_prefix_sheet(fpath)

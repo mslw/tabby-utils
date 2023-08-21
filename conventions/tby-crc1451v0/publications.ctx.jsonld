@@ -1,0 +1,7 @@
+{
+  "schema": "https://schema.org/",
+  "citation": "schema:citation",
+  "doi": "schema:identifier",
+  "url": "schema:url",
+  "date": "schema:datePublished"
+}
