@@ -133,6 +133,55 @@ def process_publications(publications):
 
     return res
 
+def process_used_for(activity):
+    """Convert an activity-dict to a string representation
+
+    The catalog lacks a representation for a "used-for" object that
+    has a title, description and URL (with just title mandatory). Best
+    we can do for now is to put it into additional display. To make it
+    look nicer than a standard dict rendering, we join all three
+    properties into a string.
+
+    We could make a separate additional display that used title as row
+    header, but that wouldn't look great if there was *just* the
+    title.
+
+    """
+
+    if isinstance(activity, list):
+        return [process_used_for(nth_activity) for nth_activity in activity]
+    if activity is None:
+        return None
+
+    breakpoint()
+    text = activity.get("title", "")
+    if description := activity.get("description", False):
+        if type(description) is list:
+            # we allowed multi-paragraph entries across columns
+            description = "\n\n".join(description)
+            # not that it matters for catalog display...
+        text = " ".join([text, "—", description])
+    if url := activity.get("url", False):
+        text = " ".join([text, f"({url})"])
+    return text
+
+
+def add_used_for(d, activity):
+    """Add activity or list of activities to a dictionary
+
+    This takes care of adding one ("used for") or multiple ("used for
+    (n)") keys to a given dictionary, so that all keys are unique and
+    all activities are added.
+
+    """
+    if activity is None:
+        pass
+    if isinstance(activity, list):
+        for n in len(activity):
+            d[f"Used for ({n+1})"] = activity[n]
+    else:
+        d["Used for"] = activity
+
 
 record = load_tabby(Path("projects/project-a/example-record/dataset@tby-crc1451v0.tsv"),
                     cpaths=[Path.cwd()/"conventions"])
@@ -169,6 +218,12 @@ cat_context = {
     },
     "sfbHomepage": "schema:mainEntityOfPage",
     "sfbDataController": "https://w3id.org/dpv#DataController",
+    "sfbUsedFor": {
+        "@id": "http://www.w3.org/ns/prov#hadUsage",
+        "@context": {
+            "url": "schema:url",
+        }
+    },
 }
 
 # crc-project, sample[organism], sample[organism-part]
@@ -219,6 +274,11 @@ meta_item["additional_display"] = [
         },
     }
 ]
+
+add_used_for(
+    d = meta_item["additional_display"][0]["content"],
+    activity = process_used_for(compacted.get("sfbUsedFor")),
+)
 
 
 meta_item = {k: v for k, v in meta_item.items() if v is not None}
