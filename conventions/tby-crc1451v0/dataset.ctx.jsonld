@@ -1,5 +1,6 @@
 {
   "bibo": "https://purl.org/ontology/bibo/",
+  "dcterms": "https://purl.org/dc/terms/",
   "obo": "https://purl.obolibrary.org/",
   "prov": "http://www.w3.org/ns/prov#",
   "schema": "https://schema.org/",
@@ -10,6 +11,7 @@
   "description": "schema:description",
   "doi": "bibo:doi",
   "funding": "schema:funding",
+  "hasPart": "dcterms:hasPart",
   "homepage": "schema:mainEntityOfPage",
   "identifier": "schema:identifier",
   "keywords": "schema:keywords",

@@ -3,5 +3,6 @@
   "funding": "@tabby-optional-many-funding@tby-crc1451v0",
   "data-controller": "@tabby-optional-many-data-controller@tby-crc1451v0",
   "publication": "@tabby-optional-many-publications@tby-crc1451v0",
+  "hasPart": "@tabby-optional-many-files@tby-ds1",
   "used-for": "@tabby-optional-many-used-for@tby-crc1451v0"
 }

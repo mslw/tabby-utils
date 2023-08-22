@@ -198,7 +198,13 @@ def process_file(f):
         "url": f.get("url"),
     }
 
+    if f.get("path") is None and f.get("name") is not None:
+        # scoped context definition doesn't work for me as intended,
+        # no idea why -- this would cover all bases
+        d["path"] = f.get("name", {}).get("@value")
+
     if d.get("contentbytesize", False):
+        # type conversion
         d["contentbytesize"] = int(d["contentbytesize"])
 
     return {k:v for k,v in d.items() if v is not None}
@@ -210,6 +216,8 @@ record = load_tabby(Path("projects/project-a/example-record/dataset@tby-crc1451v
 cat_context = {
     "schema": "https://schema.org/",
     "bibo": "https://purl.org/ontology/bibo/",
+    "dcterms": "https://purl.org/dc/terms/",
+    "nfo": "https://www.semanticdesktop.org/ontologies/2007/03/22/nfo/#",
     "obo": "https://purl.obolibrary.org/",
     "name": "schema:name",
     "title": "schema:title",
@@ -235,6 +243,15 @@ cat_context = {
             "doi": "schema:identifier",
             "datePublished": "schema:datePublished",
             "citation": "schema:citation",
+        }
+    },
+    "fileList": {
+        "@id": "dcterms:hasPart",
+        "@context": {
+            "contentbytesize": "nfo:fileSize",
+            "md5sum": "obo:NCIT_C171276",
+            "path": "schema:name",
+            "url": "schema:contentUrl",
         }
     },
     "sfbHomepage": "schema:mainEntityOfPage",
@@ -323,20 +340,6 @@ with Path("tmp").joinpath("catalog_entry.json").open("w") as jsfile:
 # File handling's different, because 1 file <-> 1 metadata object
 # ---
 
-# these are the things we care about for catalog (doesn't include e.g. checksum)
-cat_file_context = {
-    "path": "https://schema.org/name",
-    "contentbytesize": "https://www.semanticdesktop.org/ontologies/2007/03/22/nfo/#fileSize",
-    "url": "https://schema.org/contentUrl",
-}
-
-# load, expand, and compact in one go, no need to look at intermediates here
-file_record = load_tabby(
-    src=Path("projects/project-a/example-record/files@tby-ds1.tsv"),
-    single=False,
-)
-tabby_file_listing = jsonld.compact(file_record, ctx=cat_file_context)
-
 # some metadata is constant for all files
 # we copy dataset id & version from (dataset-level) meta_item
 file_required_meta = {
@@ -348,7 +351,7 @@ file_required_meta = {
 
 # make a list of catalog-conforming dicts
 cat_file_listing = []
-for file_info in tabby_file_listing.get("@graph"):
+for file_info in compacted.get("fileList", []):
     cat_file = file_required_meta | process_file(file_info)
     cat_file_listing.append(cat_file)
 
