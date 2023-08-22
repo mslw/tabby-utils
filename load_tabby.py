@@ -28,6 +28,24 @@ def get_dataset_id(input, config):
     )
 
 
+def mint_dataset_id(ds_name, project):
+    """Create a deterministic id based on a custom convention
+
+    Uses "sfb151.project.datasetname" as an input for UUID
+    generation. Lowercases project. If there are multiple projects,
+    uses the first one given.
+
+    """
+
+    dsid_input = {
+        "name": ds_name,
+        "project": project[0].lower() if isinstance(project, list) else project.lower(),
+    }
+    dsid_config = {"dataset_id_fmt": "sfb1451.{project}.{name}"}
+
+    return get_dataset_id(dsid_input, dsid_config)
+
+
 def get_metadata_source():
     """Create metadata_sources dict required by catalog schema"""
     source = {
@@ -43,20 +61,6 @@ def get_metadata_source():
         ],
     }
     return source
-
-
-def process_id(name):
-    """Mint a deterministic uuid
-
-    note: name alone is not enough
-    """
-
-    return str(
-        uuid.uuid5(
-            uuid.uuid5(uuid.NAMESPACE_DNS, "datalad.org"),
-            name,
-        )
-    )
 
 
 def process_author(author):
@@ -276,7 +280,7 @@ compacted = jsonld.compact(record, ctx=cat_context)
 meta_item = {
     "type": "dataset",
     "metadata_sources": get_metadata_source(),
-    "dataset_id": process_id(compacted.get("name")),
+    "dataset_id": mint_dataset_id(compacted.get("name"), record.get("crc-project")),
     "dataset_version": compacted.get("version"),
     "name": compacted.get(
         "title"
