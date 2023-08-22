@@ -182,6 +182,28 @@ def add_used_for(d, activity):
         d["Used for"] = activity
 
 
+def process_file(f):
+    """Convert file information to catalog schema
+
+    This gets item values (or @values, depending how they were defined
+    in tabby expansion context), and does type conversion (bytesize to
+    int). Returns a dictionary with catalog keys that can be read from
+    tabby (does not contain type and dataset id/version).
+
+    """
+
+    d = {
+        "path": f.get("path", {}).get("@value"),
+        "contentbytesize": f.get("contentbytesize", {}).get("@value"),
+        "url": f.get("url"),
+    }
+
+    if d.get("contentbytesize", False):
+        d["contentbytesize"] = int(d["contentbytesize"])
+
+    return {k:v for k,v in d.items() if v is not None}
+
+
 record = load_tabby(Path("projects/project-a/example-record/dataset@tby-crc1451v0.tsv"),
                     cpaths=[Path.cwd()/"conventions"])
 
@@ -295,6 +317,41 @@ with Path("tmp").joinpath("compacted.json").open("w") as jsfile:
 with Path("tmp").joinpath("catalog_entry.json").open("w") as jsfile:
     json.dump(meta_item, jsfile)
 
+
+# ---
+# File handling
+# File handling's different, because 1 file <-> 1 metadata object
+# ---
+
+# these are the things we care about for catalog (doesn't include e.g. checksum)
+cat_file_context = {
+    "path": "https://schema.org/name",
+    "contentbytesize": "https://www.semanticdesktop.org/ontologies/2007/03/22/nfo/#fileSize",
+    "url": "https://schema.org/contentUrl",
+}
+
+# load, expand, and compact in one go, no need to look at intermediates here
+file_record = load_tabby(
+    src=Path("projects/project-a/example-record/files@tby-ds1.tsv"),
+    single=False,
+)
+tabby_file_listing = jsonld.compact(file_record, ctx=cat_file_context)
+
+# some metadata is constant for all files
+# we copy dataset id & version from (dataset-level) meta_item
+file_required_meta = {
+    "type": "file",
+    "dataset_id": meta_item.get("dataset_id"),
+    "dataset_version": meta_item.get("dataset_version"),
+    # "metadata_sources": get_metadata_source(),
+}
+
+# make a list of catalog-conforming dicts
+cat_file_listing = []
+for file_info in tabby_file_listing.get("@graph"):
+    cat_file = file_required_meta | process_file(file_info)
+    cat_file_listing.append(cat_file)
+
 # -----
 # The code below is concerned with providing a ready-made catalog rendering for preview
 # -----
@@ -323,12 +380,20 @@ try:
 except IncompleteResultsError:
     pass
 
-# Add to the catalog
+# Add dataset metadata to the catalog
 catalog_add(
     catalog=catalog_dir,
     metadata=json.dumps(meta_item),
     config_file=catalog_dir / "config.json",
 )
+
+# Add file listing to the catalog
+for cat_file in cat_file_listing:
+    catalog_add(
+        catalog=catalog_dir,
+        metadata=json.dumps(cat_file),
+        config_file=catalog_dir / "config.json",
+    )
 
 # Set the catalog superdataset to the recently added one
 # https://github.com/datalad/datalad-catalog/issues/331
