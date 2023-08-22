@@ -230,7 +230,7 @@ cat_context = {
         }
     },
     "publications": {
-        "@id": "schema:creativeWork",
+        "@id": "schema:citation",
         "@context": {
             "doi": "schema:identifier",
             "datePublished": "schema:datePublished",
@@ -238,7 +238,7 @@ cat_context = {
         }
     },
     "sfbHomepage": "schema:mainEntityOfPage",
-    "sfbDataController": "https://w3id.org/dpv#DataController",
+    "sfbDataController": "https://w3id.org/dpv#hasDataController",
     "sfbUsedFor": {
         "@id": "http://www.w3.org/ns/prov#hadUsage",
         "@context": {
