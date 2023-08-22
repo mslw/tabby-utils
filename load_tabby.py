@@ -153,7 +153,6 @@ def process_used_for(activity):
     if activity is None:
         return None
 
-    breakpoint()
     text = activity.get("title", "")
     if description := activity.get("description", False):
         if type(description) is list:
