@@ -25,7 +25,7 @@ def affix_convention(fpath):
         "publications": "@tby-crc1451v0",
         "data-controller": "@tby-crc1451v0",
         "used-for": "@tby-crc1451v0",
-        "authors": "@tby-sd1",
+        "authors": "@tby-crc1451v0",
         "files": "@tby-ds1",
     }
 
