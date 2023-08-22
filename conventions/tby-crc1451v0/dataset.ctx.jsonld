@@ -1,7 +1,7 @@
 {
   "bibo": "https://purl.org/ontology/bibo/",
   "dcterms": "https://purl.org/dc/terms/",
-  "obo": "https://purl.obolibrary.org/",
+  "obo": "https://purl.obolibrary.org/obo/",
   "prov": "http://www.w3.org/ns/prov#",
   "schema": "https://schema.org/",
   "dpv": "https://w3id.org/dpv#",

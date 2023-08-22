@@ -218,7 +218,7 @@ cat_context = {
     "bibo": "https://purl.org/ontology/bibo/",
     "dcterms": "https://purl.org/dc/terms/",
     "nfo": "https://www.semanticdesktop.org/ontologies/2007/03/22/nfo/#",
-    "obo": "https://purl.obolibrary.org/",
+    "obo": "https://purl.obolibrary.org/obo/",
     "name": "schema:name",
     "title": "schema:title",
     "description": "schema:description",
