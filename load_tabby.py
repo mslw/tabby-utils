@@ -11,6 +11,11 @@ from datalad.support.exceptions import IncompleteResultsError
 
 from pyld import jsonld
 
+from queries import (
+    process_ols_term,
+    repr_ncbitaxon,
+    repr_uberon,
+)
 
 def get_dataset_id(input, config):
     """"""
@@ -308,8 +313,14 @@ sfb_additional_content = {
     "homepage": compacted.get("sfbHomepage"),
     "CRC project": record.get("crc-project"),
     "data controller": compacted.get("sfbDataController"),
-    "sample (organism)": record.get("sample[organism]"),
-    "sample (organism part)": record.get("sample[organism-part]"),
+    "sample (organism)": process_ols_term(
+        record.get("sample[organism]"),
+        repr_ncbitaxon,
+    ),
+    "sample (organism part)": process_ols_term(
+        record.get("sample[organism-part]"),
+        repr_uberon,
+    ),
 }
 
 # there can be zero, one, or more used for:

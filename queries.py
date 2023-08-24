@@ -1,6 +1,6 @@
 from datetime import timedelta
 import json
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin, quote as urlquote
 import xml.etree.ElementTree as ET
 
 from pyld import jsonld
@@ -48,10 +48,10 @@ CAT_AUTHOR = {
 
 
 
-session = requests_cache.CachedSession('query_cache')
+# session = requests_cache.CachedSession('query_cache')
 
-email = "m.szczepanik@fz-juelich.de"
-doi = "10.14454/FXWS-0523"  # datacite
+# email = "m.szczepanik@fz-juelich.de"
+# doi = "10.14454/FXWS-0523"  # datacite
 
 # https://www.crossref.org/documentation/retrieve-metadata/xml-api/doi-to-metadata-query/
 # r = session.get(
@@ -117,3 +117,101 @@ def query_crossref(doi, session, email="m.szczepanik@fz-juelich.de"):
     return pub
 
 # pprint(query_crossref("10.1371/journal.pone.0090081", session, email))
+
+
+def ols_lookup(term, session, iri_prefix="http://purl.obolibrary.org/obo/"):
+    """Look up a term in OLS API
+
+    Takes a term like like UBERON:0013702. Assumes that the part
+    before the colon is the ontology name, and the IRI can be formed
+    by replacing ":" with "_". Queries www.ebi.ac.uk/ols4 api.
+
+    Returns a json with response content, or None.
+
+    API docs: https://www.ebi.ac.uk/ols4/help
+
+    """
+
+    api = "http://www.ebi.ac.uk/ols4/api/ontologies"
+
+    ontology = term.split(":")[0].lower()
+    iri = urlquote(urlquote(urljoin(iri_prefix, term.replace(":", "_")), safe=""))
+    url = f"{api}/{ontology}/terms/{iri}"
+
+    r = session.get(url, headers={"Accept": "application/json"})
+
+    if r.status_code != 200:
+        return None
+
+    return r.json()
+
+
+def repr_ncbitaxon(ols_response):
+    """Turn OLS api response to string representation of a ncbi taxon.
+
+    Looks up specific keys in the response. Builds something like
+    "Adelie penguin (Pygoscelis adeliae; NCBITaxon_9238)" if it can
+    find common name & label. Otherwise, it's just label followed by
+    term in parentheses.
+
+    """
+    if ols_response is None:
+        # 400 / 404 response, return term unchanged
+        return term
+
+    name = None
+    label = ols_response.get("label")
+    short_form = ols_response.get("short_form")
+
+    # find genbank common name that is an exact synonym
+    obo_synonym = ols_response.get("obo_synonym", [])
+    if isinstance(obo_synonym, dict):
+        obo_synonym = [obo_synonym]
+    for s in obo_synonym:
+        if s.get('scope') == 'hasExactSynonym' and s.get('type') == 'genbank common name':
+            name = s.get('name')
+
+    if name is not None:
+        return f"{name} ({label}; {short_form})"
+    else:
+        return f"{label} ({short_form})"
+
+
+def repr_uberon(ols_response):
+    """Turn OLS api response to string representation of uberon term.
+
+    Looks up specific keys in the response. Builds something like
+    "body proper (UBERON_0013702).
+
+    """
+
+    if ols_response is None:
+        return term
+
+    label = ols_response.get("label")
+    short_form = ols_response.get("short_form")
+
+    return f"{label} ({short_form})"
+
+
+def process_ols_term(term, filter_func, session_name="query_cache"):
+    """Query OLS api and return nice representations
+
+    Runs an OLS API query for the given term and applies filter_func
+    to its result. Accepts single term, list of terms, or None, and
+    returns the same type. Uses requests_cache session to cache
+    responses.
+
+    """
+    session = requests_cache.CachedSession(session_name)
+
+    if isinstance(term, list):
+        return [filter_func(ols_lookup(t, session)) for t in term]
+    elif isinstance(term, str):
+        return filter_func(ols_lookup(term, session))
+    else:
+        return None
+
+# pprint(process_ols_term("NCBITaxon:9238", repr_ncbitaxon))
+# pprint(process_ols_term("UBERON:0013702", repr_uberon))
+# pprint(process_ols_term(["NCBITaxon:9238", "NCBITaxon:30457"], repr_ncbitaxon))
