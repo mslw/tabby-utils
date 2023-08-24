@@ -301,27 +301,31 @@ meta_item["publications"] = process_publications(compacted.get("publications"))
 # currently not using
 
 # additional display(s)
-# note: some things I don't have good schema definitions for, so I get them from "raw" record by key
+# note: some things don't have good schema definitions for expansion,
+# so we get from either compacted or (raw) record
 
-meta_item["additional_display"] = [
-    {
-        "name": "SFB1451-Specific",
-        "icon": "fa-solid fa-flask",
-        "content": {
-            "homepage": compacted.get("sfbHomepage"),
-            "CRC project": record.get("crc-project"),
-            "data controller": compacted.get("sfbDataController"),
-            "sample[organism]": record.get("sample[organism]"),
-            "sample[organism-part]": record.get("sample[organism-part]"),
-        },
-    }
-]
+sfb_additional_content = {
+    "homepage": compacted.get("sfbHomepage"),
+    "CRC project": record.get("crc-project"),
+    "data controller": compacted.get("sfbDataController"),
+    "sample (organism)": record.get("sample[organism]"),
+    "sample (organism part)": record.get("sample[organism-part]"),
+}
 
+# there can be zero, one, or more used for:
 add_used_for(
-    d = meta_item["additional_display"][0]["content"],
+    d = sfb_additional_content,
     activity = process_used_for(compacted.get("sfbUsedFor")),
 )
 
+# define an additional display tab for sfb content
+meta_item["additional_display"] = [
+    {
+        "name": "SFB1451",
+        "icon": "fa-solid fa-flask",
+        "content": {k: v for k,v in sfb_additional_content.items() if v is not None},
+    }
+]
 
 meta_item = {k: v for k, v in meta_item.items() if v is not None}
 
