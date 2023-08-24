@@ -1,6 +1,5 @@
 from datalad_tabby.io.xlsx import xlsx2tabby
 from pathlib import Path
-from pprint import pprint
 
 
 def get_prefix_sheet(fpath):

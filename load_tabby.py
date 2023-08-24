@@ -19,7 +19,7 @@ from queries import (
 
 
 def get_dataset_id(input, config):
-    """"""
+    """Generate a v5 uuid"""
     # consult config for custom ID selection,
     # otherwise take plain standard field
     fmt = config.get("dataset_id_fmt", "{dataset_id}")
@@ -37,7 +37,7 @@ def get_dataset_id(input, config):
 def mint_dataset_id(ds_name, project):
     """Create a deterministic id based on a custom convention
 
-    Uses "sfb151.project.datasetname" as an input for UUID
+    Uses "sfb151.{project}.{ds_name}" as an input for UUID
     generation. Lowercases project. If there are multiple projects,
     uses the first one given.
 
@@ -91,7 +91,7 @@ def process_authors(authors):
     if authors is None:
         return None
     if type(authors) is dict:
-        return process_author(a)
+        return process_author(authors)
     return [process_author(a) for a in authors]
 
 
@@ -278,11 +278,8 @@ cat_context = {
     },
 }
 
+# no defined context for:
 # crc-project, sample[organism], sample[organism-part]
-# data controller
-
-
-# id, version, name
 
 expanded = jsonld.expand(record)
 compacted = jsonld.compact(record, ctx=cat_context)
