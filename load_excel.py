@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from datalad_tabby.io.xlsx import xlsx2tabby
 from pathlib import Path
 
@@ -36,9 +37,14 @@ def affix_convention(fpath):
     return fpath.parent / f"{fpath.stem}{convention}{fpath.suffix}"
 
 
+parser = ArgumentParser()
+parser.add_argument("xslx_file", type=Path, help="source xlsx file")
+parser.add_argument("dest_dir", type=Path, help="directory to deposit tabby files")
+args = parser.parse_args()
+
 res = xlsx2tabby(
-    src=Path.cwd() / "inbox" / "example-record.xlsx",
-    dest=Path.cwd() / "projects" / "project-a",
+    src=args.xslx_file,
+    dest=args.dest_dir,
 )
 
 for fpath in res:

@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from datetime import datetime
 import json
 from pathlib import Path
@@ -226,11 +227,6 @@ def process_file(f):
     return {k: v for k, v in d.items() if v is not None}
 
 
-record = load_tabby(
-    Path("projects/project-a/example-record/dataset@tby-crc1451v0.tsv"),
-    cpaths=[Path.cwd() / "conventions"],
-)
-
 cat_context = {
     "schema": "https://schema.org/",
     "bibo": "https://purl.org/ontology/bibo/",
@@ -284,6 +280,15 @@ cat_context = {
 
 # no defined context for:
 # crc-project, sample[organism], sample[organism-part]
+
+parser = ArgumentParser()
+parser.add_argument("tabby_path", type=Path, help="Path to the tabby-dataset file")
+args = parser.parse_args()
+
+record = load_tabby(
+    args.tabby_path,  # projects/project-a/example-record/dataset@tby-crc1451v0.tsv
+    cpaths=[Path.cwd() / "conventions"],
+)
 
 expanded = jsonld.expand(record)
 compacted = jsonld.compact(record, ctx=cat_context)
