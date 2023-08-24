@@ -108,6 +108,8 @@ def process_license(license):
     about the name?
 
     """
+    if license is None:
+        return None
     parsed_url = urlparse(license)
     if parsed_url.scheme != "" and parsed_url.netloc != "":
         # looks like a URL
@@ -133,6 +135,8 @@ def process_publications(publications):
     not.
 
     """
+    if publications is None:
+        return None
     if type(publications) is dict:
         publications = [publications]
 
@@ -148,6 +152,10 @@ def process_publications(publications):
         res.append(publication)
 
     return res
+
+
+def process_funding(funding):
+    return [funding] if isinstance(funding, dict) else funding
 
 
 def process_used_for(activity):
@@ -308,7 +316,7 @@ meta_item["description"] = compacted.get("description")
 meta_item["doi"] = compacted.get("doi")
 meta_item["authors"] = process_authors(compacted.get("authors"))
 meta_item["keywords"] = compacted.get("keywords")
-meta_item["funding"] = compacted.get("funding")
+meta_item["funding"] = process_funding(compacted.get("funding"))
 meta_item["publications"] = process_publications(compacted.get("publications"))
 
 # top display (displayed as properties)
