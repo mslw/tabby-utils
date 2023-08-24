@@ -69,7 +69,8 @@ def get_metadata_source():
     return source
 
 
-def process_author(author):
+def process_authors(authors):
+    """Convert author(s) to a list of catalog-schema authors"""
     known_keys = [
         "name",
         "email",
@@ -78,21 +79,24 @@ def process_author(author):
         "familyName",
         "honorificSuffix",
     ]
-    # pop orcid key and rewrite as list of {name, identifier}
-    if orcid := author.pop("orcid", False):
-        author["identifiers"] = [
-            {"name": "ORCID", "identifier": orcid},
-        ]
-    # drop not-needed keys (like @type)
-    return {k: author.get(k) for k in known_keys if author.get(k, False)}
 
-
-def process_authors(authors):
     if authors is None:
         return None
-    if type(authors) is dict:
-        return process_author(authors)
-    return [process_author(a) for a in authors]
+    if isinstance(authors, dict):
+        authors = [authors]
+
+    result = []
+    for author in authors:
+        # drop not-known keys (like @type)
+        d = {k: v for k, v in author.items() if k in known_keys and v is not None}
+        # re-insert orcid as identifiers
+        if orcid := author.get("orcid", False):
+            d["identifiers"] = [
+                {"name": "ORCID", "identifier": orcid},
+            ]
+        result.append(d)
+
+    return result
 
 
 def process_license(license):
