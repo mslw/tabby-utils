@@ -4,11 +4,7 @@ from pathlib import Path
 
 
 def get_prefix_sheet(fpath):
-    if "_" in fpath.stem:
-        prefix, sheet = fpath.stem.split("_", maxsplit=1)
-    else:
-        prefix = ""
-        sheet = fpath.stem
+    prefix, _, sheet = fpath.stem.rpartition("_")
     return prefix, sheet
 
 
