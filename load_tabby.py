@@ -17,6 +17,7 @@ from queries import (
     repr_uberon,
 )
 
+
 def get_dataset_id(input, config):
     """"""
     # consult config for custom ID selection,
@@ -110,6 +111,7 @@ def process_license(license):
     # do the least work, for now
     return {"name": license, "url": license}
 
+
 def process_publications(publications):
     """Convert publication to catalog-schema object
 
@@ -141,6 +143,7 @@ def process_publications(publications):
         res.append(publication)
 
     return res
+
 
 def process_used_for(activity):
     """Convert an activity-dict to a string representation
@@ -216,11 +219,13 @@ def process_file(f):
         # type conversion
         d["contentbytesize"] = int(d["contentbytesize"])
 
-    return {k:v for k,v in d.items() if v is not None}
+    return {k: v for k, v in d.items() if v is not None}
 
 
-record = load_tabby(Path("projects/project-a/example-record/dataset@tby-crc1451v0.tsv"),
-                    cpaths=[Path.cwd()/"conventions"])
+record = load_tabby(
+    Path("projects/project-a/example-record/dataset@tby-crc1451v0.tsv"),
+    cpaths=[Path.cwd() / "conventions"],
+)
 
 cat_context = {
     "schema": "https://schema.org/",
@@ -244,7 +249,7 @@ cat_context = {
         "@context": {
             "name": "schema:funder",
             "identifier": "schema:identifier",
-        }
+        },
     },
     "publications": {
         "@id": "schema:citation",
@@ -252,7 +257,7 @@ cat_context = {
             "doi": "schema:identifier",
             "datePublished": "schema:datePublished",
             "citation": "schema:citation",
-        }
+        },
     },
     "fileList": {
         "@id": "dcterms:hasPart",
@@ -261,7 +266,7 @@ cat_context = {
             "md5sum": "obo:NCIT_C171276",
             "path": "schema:name",
             "url": "schema:contentUrl",
-        }
+        },
     },
     "sfbHomepage": "schema:mainEntityOfPage",
     "sfbDataController": "https://w3id.org/dpv#hasDataController",
@@ -269,7 +274,7 @@ cat_context = {
         "@id": "http://www.w3.org/ns/prov#hadUsage",
         "@context": {
             "url": "schema:url",
-        }
+        },
     },
 }
 
@@ -325,8 +330,8 @@ sfb_additional_content = {
 
 # there can be zero, one, or more used for:
 add_used_for(
-    d = sfb_additional_content,
-    activity = process_used_for(compacted.get("sfbUsedFor")),
+    d=sfb_additional_content,
+    activity=process_used_for(compacted.get("sfbUsedFor")),
 )
 
 # define an additional display tab for sfb content
@@ -334,7 +339,7 @@ meta_item["additional_display"] = [
     {
         "name": "SFB1451",
         "icon": "fa-solid fa-flask",
-        "content": {k: v for k,v in sfb_additional_content.items() if v is not None},
+        "content": {k: v for k, v in sfb_additional_content.items() if v is not None},
     }
 ]
 
