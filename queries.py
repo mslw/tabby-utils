@@ -1,6 +1,7 @@
 from datetime import timedelta
 import json
 from urllib.parse import urlparse, urljoin, quote as urlquote
+import warnings
 import xml.etree.ElementTree as ET
 
 from pyld import jsonld
@@ -141,12 +142,13 @@ def ols_lookup(term, session, iri_prefix="http://purl.obolibrary.org/obo/"):
     r = session.get(url, headers={"Accept": "application/json"})
 
     if r.status_code != 200:
+        warnings.warn(f"OLS lookup for {term} returned {r.status_code}", stacklevel=2)
         return None
 
     return r.json()
 
 
-def repr_ncbitaxon(ols_response):
+def repr_ncbitaxon(ols_response, default=None):
     """Turn OLS api response to string representation of a ncbi taxon.
 
     Looks up specific keys in the response. Builds something like
@@ -157,7 +159,7 @@ def repr_ncbitaxon(ols_response):
     """
     if ols_response is None:
         # 400 / 404 response, return term unchanged
-        return term
+        return default
 
     name = None
     label = ols_response.get("label")
@@ -177,7 +179,7 @@ def repr_ncbitaxon(ols_response):
         return f"{label} ({short_form})"
 
 
-def repr_uberon(ols_response):
+def repr_uberon(ols_response, default=None):
     """Turn OLS api response to string representation of uberon term.
 
     Looks up specific keys in the response. Builds something like
@@ -186,7 +188,7 @@ def repr_uberon(ols_response):
     """
 
     if ols_response is None:
-        return term
+        return default
 
     label = ols_response.get("label")
     short_form = ols_response.get("short_form")
@@ -206,9 +208,9 @@ def process_ols_term(term, filter_func, session_name="query_cache"):
     session = requests_cache.CachedSession(session_name)
 
     if isinstance(term, list):
-        return [filter_func(ols_lookup(t, session)) for t in term]
+        return [filter_func(ols_lookup(t, session), t) for t in term]
     elif isinstance(term, str):
-        return filter_func(ols_lookup(term, session))
+        return filter_func(ols_lookup(term, session), term)
     else:
         return None
 
