@@ -8,3 +8,5 @@ catalog/
 inbox/
 # unpacked tabby files go there (for prototyping)
 projects/
+# standard stuff
+__pycache__/
