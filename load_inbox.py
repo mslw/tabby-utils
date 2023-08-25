@@ -43,7 +43,7 @@ args = parser.parse_args()
 
 if args.xlsx_file is not None:
     res = xlsx2tabby(
-        src=args.xslx_file,
+        src=args.xlsx_file,
         dest=args.dest_dir,
     )
     for fpath in res:
