@@ -159,6 +159,27 @@ def process_funding(funding):
     return [funding] if isinstance(funding, dict) else funding
 
 
+def process_arc(data_controller):
+    """Convert data controller to access request contact
+
+    Since there can only be one, uses the first data
+    controller. Splits name (very naively) to satisfy catalog
+    schema. Oblivious to the fact that the controller needs not be a
+    person.
+
+    """
+
+    if data_controller is None:
+        return None
+    if isinstance(data_controller, list):
+        data_controller = data_controller[0]
+
+    first, _, last = data_controller.get("name", "").rpartition(" ")
+    email = data_controller.get("email", "")
+
+    return {"givenName": first, "familyName": last, "email": email}
+
+
 def process_used_for(activity):
     """Convert an activity-dict to a string representation
 
@@ -319,6 +340,7 @@ meta_item["authors"] = process_authors(compacted.get("authors"))
 meta_item["keywords"] = compacted.get("keywords")
 meta_item["funding"] = process_funding(compacted.get("funding"))
 meta_item["publications"] = process_publications(compacted.get("publications"))
+meta_item["access_request_contact"] = process_arc(compacted.get("sfbDataController"))
 
 # top display (displayed as properties)
 # max items: 5
