@@ -298,6 +298,7 @@ cat_context = {
             "url": "schema:contentUrl",
         },
     },
+    "address": "schema:PostalAddress",
     "sfbHomepage": "schema:mainEntityOfPage",
     "sfbDataController": "https://w3id.org/dpv#hasDataController",
     "sfbUsedFor": {
