@@ -1,4 +1,29 @@
 #+title: SFB tabby utils
 
+* Overview
+
 This repo contains my own utils for parsing tabby input for DataLad catalog, with specific focus on SFB1451.
-Currently, the code is under heavy prototyping as I figure how to best capture the process.
+
+The code is functional and presented in the form of argparse-parameterised scripts, but heavily proototype in nature;
+parts of the code rely on files being saved or having been saved in the code / working directory; parts are unused.
+
+The key scripts are:
+- =load_inbox.py= covers reading an excel file or bunch of tsv files, and placing renamed tsv files in target directory
+- =load_tabby.py= reads a dataset tabby file and produces a catalog schema translation
+
+* Philosophy
+
+- A convention for reading the tabby collection is provided with this repository
+- JSON-LD expansion and compaction is used to align set of terms (roughly) with catalog schema
+- Processing of values (e.g. reshaping, ensuring type) is done via a set of =process-*= functions
+- A "temporary" catalog in the working directory is being populated with created entries to allow
+  "live" preview while prototyping. It needs to be created by hand with a permissive config,
+  you can use [[https://github.com/sfb1451/tabby-to-catalog-demo/blob/main/config.json][this one]].
+- Some terms are resolved with API queries, done with simple requests and cached using requests_cache
+
+* Requirements
+
+In lieu of a proper requirements file:
+- dev version of datalad-tabby
+- dev version of datalad-catalog with [[https://github.com/datalad/datalad-catalog/issues/331][#331]] patched by adding an "else" statement
+- pyld, requests_cache
