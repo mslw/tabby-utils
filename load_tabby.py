@@ -159,6 +159,11 @@ def process_funding(funding):
     return [funding] if isinstance(funding, dict) else funding
 
 
+def process_keywords(keywords):
+    """Ensure that keywords are an array"""
+    return [keywords] if isinstance(keywords, str) else keywords
+
+
 def process_arc(data_controller):
     """Convert data controller to access request contact
 
@@ -338,7 +343,7 @@ meta_item["license"] = process_license(compacted.get("license"))
 meta_item["description"] = compacted.get("description")
 meta_item["doi"] = compacted.get("doi")
 meta_item["authors"] = process_authors(compacted.get("authors"))
-meta_item["keywords"] = compacted.get("keywords")
+meta_item["keywords"] = process_keywords(compacted.get("keywords"))
 meta_item["funding"] = process_funding(compacted.get("funding"))
 meta_item["publications"] = process_publications(compacted.get("publications"))
 meta_item["access_request_contact"] = process_arc(compacted.get("sfbDataController"))
