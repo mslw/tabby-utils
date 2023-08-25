@@ -155,6 +155,7 @@ def process_publications(publications):
 
 
 def process_funding(funding):
+    """Ensure that funding is an array"""
     return [funding] if isinstance(funding, dict) else funding
 
 
