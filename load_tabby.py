@@ -372,7 +372,7 @@ args = parser.parse_args()
 
 record = load_tabby(
     args.tabby_path,  # projects/project-a/example-record/dataset@tby-crc1451v0.tsv
-    cpaths=[Path.cwd() / "conventions"],
+    cpaths=[Path(__file__).parent / "conventions"],
 )
 
 expanded = jsonld.expand(record)
