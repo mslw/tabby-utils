@@ -8,8 +8,8 @@ from urllib.parse import urlparse
 
 from datalad_tabby.io import load_tabby
 from datalad.api import catalog_add, catalog_remove, catalog_set, catalog_validate
-from datalad.support.exceptions import IncompleteResultsError
 from datalad_next.datasets import Dataset
+from datalad_next.exceptions import IncompleteResultsError
 from datalad_next.utils import get_dataset_root
 
 from pyld import jsonld
