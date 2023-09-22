@@ -97,6 +97,7 @@ def describe_subdataset(file_path, tabby_id, tabby_version):
                 "dataset_path": str(subds_path),
             },
         ],
+        "metadata_sources": get_metadata_source(),
     }
 
     return parent_meta_item
