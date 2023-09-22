@@ -369,6 +369,9 @@ cat_context = {
 
 parser = ArgumentParser()
 parser.add_argument("tabby_path", type=Path, help="Path to the tabby-dataset file")
+parser.add_argument("--catalog", type=Path, help="Catalog to add to")
+parser.add_argument("--set-as-super", action="store_true")
+parser.add_argument("--remove-first", action="store_true")
 args = parser.parse_args()
 
 record = load_tabby(
@@ -441,19 +444,9 @@ meta_item = {k: v for k, v in meta_item.items() if v is not None}
 # display what would be added to the catalog
 pprint(meta_item)
 
-# save all the intermediate metadata for inspection
-with Path("tmp").joinpath("tabby_record.json").open("w") as jsfile:
-    json.dump(record, jsfile, indent=4)
-with Path("tmp").joinpath("expanded.json").open("w") as jsfile:
-    json.dump(expanded, jsfile, indent=4)
-with Path("tmp").joinpath("compacted.json").open("w") as jsfile:
-    json.dump(compacted, jsfile, indent=4)
-with Path("tmp").joinpath("catalog_entry.json").open("w") as jsfile:
-    json.dump(meta_item, jsfile)
-
-
 # ---
 # Parent dataset
+# ---
 
 parent_meta_item = describe_subdataset(
     file_path=args.tabby_path,
@@ -486,11 +479,16 @@ for file_info in compacted.get("fileList", []):
     cat_file_listing.append(cat_file)
 
 # -----
-# The code below is concerned with providing a ready-made catalog rendering for preview
+# Adding to a catalog
 # -----
 
-# I have a catalog at hand to test things
-catalog_dir = Path("catalog")
+
+if args.catalog is not None:
+    # If a catalog path was given, use that catalog
+    catalog_dir = args.catalog
+else:
+    # Otherwise, use a testing one in cwd
+    catalog_dir = Path("catalog")
 
 # I need to know id and version to clear old / set super
 dsid = meta_item["dataset_id"]
@@ -501,17 +499,18 @@ print(dsid, dsver)
 # why catalog is needed: https://github.com/datalad/datalad-catalog/issues/330
 catalog_validate(catalog=catalog_dir, metadata=json.dumps(meta_item))
 
-# Remove the entry for the dataset, if present
-try:
-    catalog_remove(
-        catalog=catalog_dir,
-        dataset_id=dsid,
-        dataset_version=dsver,
-        reckless=True,
-        on_failure="continue",
-    )
-except IncompleteResultsError:
-    pass
+# If requested and present, remove existing entries for the dataset
+if args.remove_first:
+    try:
+        catalog_remove(
+            catalog=catalog_dir,
+            dataset_id=dsid,
+            dataset_version=dsver,
+            reckless=True,
+            on_failure="continue",
+        )
+    except IncompleteResultsError:
+        pass
 
 # Add dataset metadata to the catalog
 catalog_add(
@@ -536,15 +535,15 @@ for cat_file in cat_file_listing:
         config_file=catalog_dir / "config.json",
     )
 
-# Set the catalog superdataset to the recently added one
-# https://github.com/datalad/datalad-catalog/issues/331
-catalog_set(
-    catalog=catalog_dir,
-    property="home",
-    dataset_id=dsid,
-    dataset_version=dsver,
-    reckless="overwrite",
-)
+# If requested, set the catalog superdataset to the recently added one
+if args.set_as_super:
+    catalog_set(
+        catalog=catalog_dir,
+        property="home",
+        dataset_id=dsid,
+        dataset_version=dsver,
+        reckless="overwrite",
+    )
 
 """
 Notes
