@@ -16,7 +16,7 @@ The key scripts are:
 - A convention for reading the tabby collection is provided with this repository
 - JSON-LD expansion and compaction is used to align set of terms (roughly) with catalog schema
 - Processing of values (e.g. reshaping, ensuring type) is done via a set of =process-*= functions
-- A "temporary" catalog in the working directory is being populated with created entries to allow
+- Optionally, a "temporary" catalog in the working directory can be populated with created entries to allow
   "live" preview while prototyping. It needs to be created by hand with a permissive config,
   you can use [[https://github.com/sfb1451/tabby-to-catalog-demo/blob/main/config.json][this one]].
 - Some terms are resolved with API queries, done with simple requests and cached using requests_cache
@@ -27,3 +27,28 @@ In lieu of a proper requirements file:
 - dev version of datalad-tabby
 - dev version of datalad-catalog with [[https://github.com/datalad/datalad-catalog/issues/331][#331]] patched by adding an "else" statement
 - pyld, requests_cache
+
+* Workflow - rough overview
+
+Scripts are scattered across this repo (tabby-related) and the [[https://github.com/psychoinformatics-de/sfb1451-projects-catalog][sfb1451 projects catalog]] (non-tabby) repo.
+To add a tabby subdataset to an existing project dataset, the following is needed:
+
+1. save the tabby files in a dataset (ideally recursively, so that superdataset is updated too)
+2. extract and add the project metadata (tabby addition means it is in a new version):
+
+  #+begin_src bash
+    python .../extract_project.py PROJECTDIR OUTDIR
+    datalad catalog-add -c ... -F ... -m ...
+  #+end_src
+
+3. "inject" metadata that does not come from any extractor (keywords, etc)
+
+   #+begin_src bash
+     python .../inject_metadata.py --funding --keywords PROJECTDIR
+   #+end_src
+
+4. finally, add tabby metadata:
+
+   #+begin_src bash
+     python .../load_tabby.py --catalog ... TABBYFILE
+   #+end_src
