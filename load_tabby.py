@@ -62,10 +62,14 @@ def get_tabby_subdataset_path(tabby_file_path, ds_root_path):
 
     Note: this is currently tuned to a single dir layout, and reports
     tabby file's parent dir as the location of described subdataset.
+    If the tabby collection is located in .datalad/tabby, reports
+    relative to that directory instead.
 
     """
-
-    return tabby_file_path.parent.relative_to(ds_root_path)
+    relpath = tabby_file_path.parent.relative_to(ds_root_path)
+    if relpath.match(".datalad/tabby/*"):
+        return relpath.relative_to(".datalad/tabby/")
+    return relpath
 
 
 def describe_subdataset(file_path, tabby_id, tabby_version):
@@ -100,7 +104,7 @@ def describe_subdataset(file_path, tabby_id, tabby_version):
         {
             "dataset_id": tabby_id,
             "dataset_version": tabby_version,
-            "dataset_path": str(subds_path),
+            "dataset_path": subds_path.as_posix(),
         },
     ]
 
