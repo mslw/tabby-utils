@@ -1,0 +1,4 @@
+datalad-tabby @ git+https://github.com/psychoinformatics-de/datalad-tabby.git@main
+datalad-catalog @ git+https://github.com/datalad/datalad-catalog.git@main
+pyld
+requests_cache
