@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-from datetime import datetime
 import json
 from pathlib import Path
 from pprint import pprint
