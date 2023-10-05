@@ -11,6 +11,9 @@ from datalad.api import catalog_add, catalog_remove, catalog_set, catalog_valida
 from datalad_next.datasets import Dataset
 from datalad_next.exceptions import IncompleteResultsError
 from datalad_next.utils import get_dataset_root
+from datalad_catalog.schema_utils import (
+    get_metadata_item,
+)
 
 from pyld import jsonld
 
@@ -85,39 +88,24 @@ def describe_subdataset(file_path, tabby_id, tabby_version):
 
     ds = Dataset(ds_root_path)
 
-    parent_meta_item = {
-        "type": "dataset",
-        "dataset_id": ds.id,
-        "dataset_version": ds.repo.get_hexsha(),
-        "name": "",
-        "subdatasets": [
-            {
-                "dataset_id": tabby_id,
-                "dataset_version": tabby_version,
-                "dataset_path": str(subds_path),
-            },
-        ],
-        "metadata_sources": get_metadata_source(),
-    }
+    # Use catalog schema_utils to get base structure of metadata item
+    parent_meta_item = get_metadata_item(
+        item_type='dataset',
+        dataset_id=ds.id,
+        dataset_version=ds.repo.get_hexsha(),
+        source_name="tabby",
+        source_version="0.1.0",
+    )
+    # add sub dataset
+    parent_meta_item["subdatasets"] = [
+        {
+            "dataset_id": tabby_id,
+            "dataset_version": tabby_version,
+            "dataset_path": str(subds_path),
+        },
+    ]
 
     return parent_meta_item
-
-
-def get_metadata_source():
-    """Create metadata_sources dict required by catalog schema"""
-    source = {
-        "key_source_map": {},
-        "sources": [
-            {
-                "source_name": "tabby",
-                "source_version": "0.1.0",
-                "source_time": datetime.now().timestamp(),
-                # "agent_email": get_gitconfig("user.name"),
-                # "agent_name": get_gitconfig("user.email"),
-            }
-        ],
-    }
-    return source
 
 
 def process_authors(authors):
@@ -382,16 +370,16 @@ record = load_tabby(
 expanded = jsonld.expand(record)
 compacted = jsonld.compact(record, ctx=cat_context)
 
-meta_item = {
-    "type": "dataset",
-    "metadata_sources": get_metadata_source(),
-    "dataset_id": mint_dataset_id(compacted.get("name"), record.get("crc-project")),
-    "dataset_version": compacted.get("version"),
-    "name": compacted.get(
-        "title"
-    ),  # note: this becomes catalog page title, so title fits better
-}
-
+# Use catalog schema_utils to get base structure of metadata item
+meta_item = get_metadata_item(
+    item_type='dataset',
+    dataset_id=mint_dataset_id(compacted.get("name"), record.get("crc-project")),
+    dataset_version=compacted.get("version"),
+    source_name="tabby",
+    source_version="0.1.0",
+)
+# note: this becomes catalog page title, so title fits better
+meta_item["name"] = compacted.get("title")
 meta_item["license"] = process_license(compacted.get("license"))
 meta_item["description"] = compacted.get("description")
 meta_item["doi"] = compacted.get("doi")
@@ -465,12 +453,14 @@ if parent_meta_item is not None:
 
 # some metadata is constant for all files
 # we copy dataset id & version from (dataset-level) meta_item
-file_required_meta = {
-    "type": "file",
-    "dataset_id": meta_item.get("dataset_id"),
-    "dataset_version": meta_item.get("dataset_version"),
-    # "metadata_sources": get_metadata_source(),
-}
+file_required_meta = get_metadata_item(
+    item_type='file',
+    dataset_id=meta_item.get("dataset_id"),
+    dataset_version=meta_item.get("dataset_version"),
+    source_name="tabby",
+    source_version="0.1.0",
+    exclude_keys=["path"],
+)
 
 # make a list of catalog-conforming dicts
 cat_file_listing = []

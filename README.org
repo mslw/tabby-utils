@@ -21,12 +21,14 @@ The key scripts are:
   you can use [[https://github.com/sfb1451/tabby-to-catalog-demo/blob/main/config.json][this one]].
 - Some terms are resolved with API queries, done with simple requests and cached using requests_cache
 
-* Requirements
+* Install Requirements
 
-In lieu of a proper requirements file:
-- dev version of datalad-tabby
-- dev version of datalad-catalog with [[https://github.com/datalad/datalad-catalog/issues/331][#331]] patched by adding an "else" statement
-- pyld, requests_cache
+```
+python -m venv /tmp/my_env
+source /tmp/my_env/bin/activate
+
+pip install requirements-devel.txt
+```
 
 * Workflow - rough overview
 
