@@ -64,7 +64,7 @@ def subdataset_item(ds, tabby_path):
 
 parser = ArgumentParser()
 parser.add_argument("ds_path", type=Path)
-parser.add_argument("--catalog", type=Path, help="Catalog to add to")
+parser.add_argument("-c", "--catalog", type=Path, help="Catalog to add to")
 parser.add_argument("--tabby-anywhere", action="store_true", help="Search outside .datalad/tabby")
 args = parser.parse_args()
 

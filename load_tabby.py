@@ -270,7 +270,7 @@ cat_context = {
 
 parser = ArgumentParser()
 parser.add_argument("tabby_path", type=Path, help="Path to the tabby-dataset file")
-parser.add_argument("--catalog", type=Path, help="Catalog to add to")
+parser.add_argument("-c", "--catalog", type=Path, help="Catalog to add to")
 parser.add_argument("--set-as-super", action="store_true")
 parser.add_argument("--remove-first", action="store_true")
 args = parser.parse_args()
