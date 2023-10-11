@@ -9,12 +9,6 @@ from datalad_tabby.io import load_tabby
 
 from utils import mint_dataset_id
 
-parser = ArgumentParser()
-parser.add_argument("ds_path", type=Path)
-parser.add_argument("--catalog", type=Path, help="Catalog to add to")
-parser.add_argument("--tabby-anywhere", action="store_true", help="Search outside .datalad/tabby")
-args = parser.parse_args()
-
 
 def get_tabby_subdataset_path(tabby_file_path, ds_root_path):
     """Get path of subdataset described by tabby
@@ -67,6 +61,12 @@ def subdataset_item(ds, tabby_path):
 
     return {"dataset_path": ds_path, "dataset_id": ds_id, "version": ds_version}
 
+
+parser = ArgumentParser()
+parser.add_argument("ds_path", type=Path)
+parser.add_argument("--catalog", type=Path, help="Catalog to add to")
+parser.add_argument("--tabby-anywhere", action="store_true", help="Search outside .datalad/tabby")
+args = parser.parse_args()
 
 # Search the dataset and create subdataset metadata dicts
 ds = Dataset(args.ds_path)
