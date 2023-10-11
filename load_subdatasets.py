@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from pprint import pprint
 
+from datalad.api import catalog_add
 from datalad_catalog.schema_utils import get_metadata_item
 from datalad_next.datasets import Dataset
 from datalad_tabby.io import load_tabby
@@ -10,7 +11,8 @@ from utils import mint_dataset_id
 
 parser = ArgumentParser()
 parser.add_argument("ds_path", type=Path)
-parser.add_argument("--tabby-anywhere", action="store_true")
+parser.add_argument("--catalog", type=Path, help="Catalog to add to")
+parser.add_argument("--tabby-anywhere", action="store_true", help="Search outside .datalad/tabby")
 args = parser.parse_args()
 
 
@@ -66,8 +68,19 @@ def subdataset_item(ds, tabby_path):
     return {"dataset_path": ds_path, "dataset_id": ds_id, "version": ds_version}
 
 
+# Search the dataset and create subdataset metadata dicts
 ds = Dataset(args.ds_path)
 
+subdatasets = []
+for tabby_path in list_tabby_ds_files(ds, anywhere=args.tabby_anywhere):
+    subdatasets.append(subdataset_item(ds, tabby_path))
+
+# Early exit if nothing to do
+if len(subdatasets) == 0:
+    print("No subdatasets found")
+    exit()
+
+# Create a catalog metadata item and print it
 dataset_item = get_metadata_item(
     item_type="dataset",
     dataset_id=ds.id,
@@ -75,11 +88,13 @@ dataset_item = get_metadata_item(
     source_name="tabby",
     source_version="0.1.0",
 )
-
-subdatasets = []
-for tabby_path in list_tabby_ds_files(ds, anywhere=args.tabby_anywhere):
-    subdatasets.append(subdataset_item(ds, tabby_path))
-
 dataset_item["subdatasets"] = subdatasets
-
 pprint(dataset_item)
+
+# Add to catalog if requested
+if args.catalog is not None:
+    catalog_add(
+        catalog=catalog_dir,
+        metadata=json.dumps(dataset_item),
+        config_file=catalog_dir / "config.json",
+    )
