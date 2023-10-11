@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 from pathlib import Path
 from pprint import pprint
-import uuid
 
 from datalad_catalog.schema_utils import get_metadata_item
 from datalad_next.datasets import Dataset
 from datalad_tabby.io import load_tabby
-from pyld import jsonld
+
+from utils import mint_dataset_id
 
 parser = ArgumentParser()
 parser.add_argument("ds_path", type=Path)
@@ -27,21 +27,6 @@ def get_tabby_subdataset_path(tabby_file_path, ds_root_path):
     if relpath.match(".datalad/tabby/*"):
         return relpath.relative_to(".datalad/tabby/")
     return relpath
-
-
-def lowercase_1st(x):
-    """Return lowercase string, using first element if list is provided"""
-    if isinstance(x, list):
-        return x[0].lower()
-    else:
-        return x.lower()
-
-
-def mint_dataset_id(fmt, ns="datalad.org", **kwargs):
-    id = uuid.uuid5(
-        namespace=uuid.uuid5(uuid.NAMESPACE_DNS, ns), name=fmt.format(**kwargs)
-    )
-    return id
 
 
 def list_tabby_ds_files(ds, anywhere=False):
@@ -73,9 +58,8 @@ def subdataset_item(ds, tabby_path):
     )
 
     ds_id = mint_dataset_id(
-        fmt="sfb151.{project}.{name}",
-        project=lowercase_1st(record["crc-project"]),
-        name=record["name"],
+        ds_name=record["name"],
+        project=record["crc-project"],
     )
     ds_version = record["version"]
 
@@ -85,7 +69,7 @@ def subdataset_item(ds, tabby_path):
 ds = Dataset(args.ds_path)
 
 dataset_item = get_metadata_item(
-    item_type='dataset',
+    item_type="dataset",
     dataset_id=ds.id,
     dataset_version=ds.repo.get_hexsha(),
     source_name="tabby",
