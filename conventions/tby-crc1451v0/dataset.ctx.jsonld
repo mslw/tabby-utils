@@ -7,6 +7,7 @@
   "dpv": "https://w3id.org/dpv#",
   "author": "schema:author",
   "citation": "schema:citation",
+  "crc-project": "schema:ResearchProject",
   "data-controller": "dpv:hasDataController",
   "description": "schema:description",
   "doi": "bibo:doi",
@@ -19,6 +20,8 @@
   "license": "schema:license",
   "name": "schema:name",
   "publication": "schema:citation",
+  "sample[organism]": "obo:UBERON_0000468",
+  "sample[organism-part]": "obo:UBERON_0000475",
   "title": "schema:title",
   "used-for": "prov:hadUsage",
   "version": "schema:version"
