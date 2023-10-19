@@ -2,14 +2,11 @@ from argparse import ArgumentParser
 import json
 from pathlib import Path
 from pprint import pprint
-import uuid
 from urllib.parse import urlparse
 
 from datalad_tabby.io import load_tabby
 from datalad.api import catalog_add, catalog_remove, catalog_set, catalog_validate
-from datalad_next.datasets import Dataset
 from datalad_next.exceptions import IncompleteResultsError
-from datalad_next.utils import get_dataset_root
 from datalad_catalog.schema_utils import (
     get_metadata_item,
 )
@@ -21,94 +18,7 @@ from queries import (
     repr_ncbitaxon,
     repr_uberon,
 )
-
-
-def get_dataset_id(input, config):
-    """Generate a v5 uuid"""
-    # consult config for custom ID selection,
-    # otherwise take plain standard field
-    fmt = config.get("dataset_id_fmt", "{dataset_id}")
-    # instantiate raw ID string
-    raw_id = fmt.format(**input)
-    # now turn into UUID deterministically
-    return str(
-        uuid.uuid5(
-            uuid.uuid5(uuid.NAMESPACE_DNS, "datalad.org"),
-            raw_id,
-        )
-    )
-
-
-def mint_dataset_id(ds_name, project):
-    """Create a deterministic id based on a custom convention
-
-    Uses "sfb151.{project}.{ds_name}" as an input for UUID
-    generation. Lowercases project. If there are multiple projects,
-    uses the first one given.
-
-    """
-
-    dsid_input = {
-        "name": ds_name,
-        "project": project[0].lower() if isinstance(project, list) else project.lower(),
-    }
-    dsid_config = {"dataset_id_fmt": "sfb1451.{project}.{name}"}
-
-    return get_dataset_id(dsid_input, dsid_config)
-
-
-def get_tabby_subdataset_path(tabby_file_path, ds_root_path):
-    """Get path of subdataset described by tabby
-
-    Note: this is currently tuned to a single dir layout, and reports
-    tabby file's parent dir as the location of described subdataset.
-    If the tabby collection is located in .datalad/tabby, reports
-    relative to that directory instead.
-
-    """
-    relpath = tabby_file_path.parent.relative_to(ds_root_path)
-    if relpath.match(".datalad/tabby/*"):
-        return relpath.relative_to(".datalad/tabby/")
-    return relpath
-
-
-def describe_subdataset(file_path, tabby_id, tabby_version):
-    """Return catalog metadata describing subdataset relation
-
-    If tabby file, which describes dataset T, is inside another
-    dataset A, this will return a catalog metadata item describing A
-    as having T as its subdataset.
-
-    Returns None if parent dataset cannot be found.
-
-    """
-
-    ds_root_path = get_dataset_root(file_path)
-    if ds_root_path is None:
-        return None
-
-    subds_path = get_tabby_subdataset_path(file_path, ds_root_path)
-
-    ds = Dataset(ds_root_path)
-
-    # Use catalog schema_utils to get base structure of metadata item
-    parent_meta_item = get_metadata_item(
-        item_type='dataset',
-        dataset_id=ds.id,
-        dataset_version=ds.repo.get_hexsha(),
-        source_name="tabby",
-        source_version="0.1.0",
-    )
-    # add sub dataset
-    parent_meta_item["subdatasets"] = [
-        {
-            "dataset_id": tabby_id,
-            "dataset_version": tabby_version,
-            "dataset_path": subds_path.as_posix(),
-        },
-    ]
-
-    return parent_meta_item
+from utils import mint_dataset_id
 
 
 def process_authors(authors):
@@ -385,7 +295,7 @@ cat_context = {
 
 parser = ArgumentParser()
 parser.add_argument("tabby_path", type=Path, help="Path to the tabby-dataset file")
-parser.add_argument("--catalog", type=Path, help="Catalog to add to")
+parser.add_argument("-c", "--catalog", type=Path, help="Catalog to add to")
 parser.add_argument("--set-as-super", action="store_true")
 parser.add_argument("--remove-first", action="store_true")
 args = parser.parse_args()
@@ -500,19 +410,6 @@ meta_item = {k: v for k, v in meta_item.items() if v is not None}
 # display what would be added to the catalog
 pprint(meta_item)
 
-# ---
-# Parent dataset
-# ---
-
-parent_meta_item = describe_subdataset(
-    file_path=args.tabby_path,
-    tabby_id=meta_item["dataset_id"],
-    tabby_version=meta_item["dataset_version"],
-)
-
-if parent_meta_item is not None:
-    pprint(parent_meta_item)
-
 
 # ---
 # File handling
@@ -576,14 +473,6 @@ catalog_add(
     metadata=json.dumps(meta_item),
     config_file=catalog_dir / "config.json",
 )
-
-# Link the dataset as a subdataset
-if parent_meta_item is not None:
-    catalog_add(
-        catalog=catalog_dir,
-        metadata=json.dumps(parent_meta_item),
-        config_file=catalog_dir / "config.json",
-    )
 
 # Add file listing to the catalog
 for cat_file in cat_file_listing:
