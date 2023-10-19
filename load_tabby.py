@@ -367,29 +367,20 @@ meta_item["additional_display"] = [
 
 # add additional display definitions:
 # this specifies definitions for all fields in 'additional_display' 
-# except for the variables specified by users via tabby files, which
-# are appended to resolvable ontologies (e.g. 'NCBITaxon:9238' or 'UBERON:0013702')
-sfb_mapping = {
-    "homepage": "sfbHomepage",
-    "CRC project": "sfbProject",
-    "data controller": "sfbDataController",
-    "sample (organism)": "sfbSampleOrganism",
-    "sample (organism part)": "sfbSamplePart",
-    "Used for": "sfbUsedFor",
-}
+
 meta_item["additional_display_definitions"] = {
     "SFB1451": {
         "keys": {
-            "homepage": resolve_sfb_def(sfb_mapping["homepage"], cat_context),
-            "CRC project": resolve_sfb_def(sfb_mapping["CRC project"], cat_context),
+            "homepage": resolve_sfb_def("sfbHomepage", cat_context),
+            "CRC project": resolve_sfb_def("sfbProject", cat_context),
             "data controller": {
-                "self": resolve_sfb_def(sfb_mapping["data controller"], cat_context),
+                "self": resolve_sfb_def("sfbDataController", cat_context),
                 "email": "https://schema.org/email",
                 "name": "https://schema.org/name"
             },
-            "sample (organism)": resolve_sfb_def(sfb_mapping["sample (organism)"], cat_context),
-            "sample (organism part)": resolve_sfb_def(sfb_mapping["sample (organism part)"], cat_context),
-            "Used for": resolve_sfb_def(sfb_mapping["Used for"], cat_context),
+            "sample (organism)": resolve_sfb_def("sfbSampleOrganism", cat_context),
+            "sample (organism part)": resolve_sfb_def("sfbSamplePart", cat_context),
+            "Used for": resolve_sfb_def("sfbUsedFor", cat_context),
         },
         "values": {
             "homepage": "https://schema.org/URL",
