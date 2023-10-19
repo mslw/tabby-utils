@@ -7,6 +7,8 @@ from datalad_catalog.schema_utils import get_metadata_item
 from datalad_next.datasets import Dataset
 from datalad_tabby.io import load_tabby
 
+from pyld import jsonld
+
 from utils import mint_dataset_id
 
 
@@ -53,11 +55,22 @@ def subdataset_item(ds, tabby_path):
         cpaths=[Path(__file__).parent / "conventions"],
     )
 
-    ds_id = mint_dataset_id(
-        ds_name=record["name"],
-        project=record["crc-project"],
+    # use context to standardize keys
+    compacted = jsonld.compact(
+        input_=record,
+        ctx={
+            "schema": "https://schema.org/",
+            "name": "schema:name",
+            "version": "schema:version",
+            "sfbProject": "schema:ResearchProject",
+        },
     )
-    ds_version = record["version"]
+
+    ds_id = mint_dataset_id(
+        ds_name=compacted["name"],
+        project=compacted["sfbProject"],
+    )
+    ds_version = compacted["version"]
 
     return {"dataset_path": ds_path, "dataset_id": ds_id, "version": ds_version}
 

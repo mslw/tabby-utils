@@ -311,7 +311,7 @@ compacted = jsonld.compact(record, ctx=cat_context)
 # Use catalog schema_utils to get base structure of metadata item
 meta_item = get_metadata_item(
     item_type='dataset',
-    dataset_id=mint_dataset_id(compacted.get("name"), record.get("crc-project")),
+    dataset_id=mint_dataset_id(compacted.get("name"), compacted.get("sfbProject")),
     dataset_version=compacted.get("version"),
     source_name="tabby",
     source_version="0.1.0",
