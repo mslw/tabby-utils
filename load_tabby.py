@@ -303,6 +303,31 @@ def process_file(f):
     return {k: v for k, v in d.items() if v is not None}
 
 
+def reformat_sample_term(term):
+    """Reformat tabby-dataset terms for 'sample[organism]'
+    and 'sample[organism-part]' to get resolved IRI"""
+    obo = "http://purl.obolibrary.org/obo/"
+    if isinstance(term, list):
+        return [obo + t.replace(':', '_') for t in term]
+    elif isinstance(term, str):
+        return obo + term.replace(':', '_')
+    else:
+        return None
+
+
+def resolve_sfb_def(term, ctx):
+    """Resolve a term definition given a context dict"""
+    definition = ctx[term]
+    if isinstance(definition, dict):
+        definition = definition['@id']
+    if definition.startswith('http'):
+        return definition
+    def_parts = definition.split(':')
+    onto = def_parts[0]
+    def_term = def_parts[1]
+    return ctx[onto] + def_term
+
+
 cat_context = {
     "schema": "https://schema.org/",
     "bibo": "https://purl.org/ontology/bibo/",
@@ -353,10 +378,10 @@ cat_context = {
             "url": "schema:url",
         },
     },
+    "sfbProject": "schema:ResearchProject",
+    "sfbSampleOrganism": "obo:UBERON_0000468",
+    "sfbSamplePart": "obo:UBERON_0000475",
 }
-
-# no defined context for:
-# crc-project, sample[organism], sample[organism-part]
 
 parser = ArgumentParser()
 parser.add_argument("tabby_path", type=Path, help="Path to the tabby-dataset file")
@@ -403,14 +428,14 @@ meta_item["access_request_contact"] = process_arc(compacted.get("sfbDataControll
 
 sfb_additional_content = {
     "homepage": compacted.get("sfbHomepage"),
-    "CRC project": record.get("crc-project"),
+    "CRC project": compacted.get("sfbProject"),
     "data controller": compacted.get("sfbDataController"),
     "sample (organism)": process_ols_term(
-        record.get("sample[organism]"),
+        compacted.get("sfbSampleOrganism"),
         repr_ncbitaxon,
     ),
     "sample (organism part)": process_ols_term(
-        record.get("sample[organism-part]"),
+        compacted.get("sfbSamplePart"),
         repr_uberon,
     ),
 }
@@ -429,6 +454,46 @@ meta_item["additional_display"] = [
         "content": {k: v for k, v in sfb_additional_content.items() if v is not None},
     }
 ]
+
+# add additional display definitions:
+# this specifies definitions for all fields in 'additional_display' 
+# except for the variables specified by users via tabby files, which
+# are appended to resolvable ontologies (e.g. 'NCBITaxon:9238' or 'UBERON:0013702')
+sfb_mapping = {
+    "homepage": "sfbHomepage",
+    "CRC project": "sfbProject",
+    "data controller": "sfbDataController",
+    "sample (organism)": "sfbSampleOrganism",
+    "sample (organism part)": "sfbSamplePart",
+    "Used for": "sfbUsedFor",
+}
+meta_item["additional_display_definitions"] = {
+    "SFB1451": {
+        "keys": {
+            "homepage": resolve_sfb_def(sfb_mapping["homepage"], cat_context),
+            "CRC project": resolve_sfb_def(sfb_mapping["CRC project"], cat_context),
+            "data controller": {
+                "self": resolve_sfb_def(sfb_mapping["data controller"], cat_context),
+                "email": "https://schema.org/email",
+                "name": "https://schema.org/name"
+            },
+            "sample (organism)": resolve_sfb_def(sfb_mapping["sample (organism)"], cat_context),
+            "sample (organism part)": resolve_sfb_def(sfb_mapping["sample (organism part)"], cat_context),
+            "Used for": resolve_sfb_def(sfb_mapping["Used for"], cat_context),
+        },
+        "values": {
+            "homepage": "https://schema.org/URL",
+            "CRC project": "https://schema.org/Text",
+            "data controller": {
+                "email": "https://schema.org/Text",
+                "name": "https://schema.org/Text"
+            },
+            "sample (organism)": reformat_sample_term(compacted.get("sfbSampleOrganism")),
+            "sample (organism part)": reformat_sample_term(compacted.get("sfbSamplePart")),
+            "Used for": "https://schema.org/Text"
+        }
+    }
+}
 
 meta_item = {k: v for k, v in meta_item.items() if v is not None}
 
