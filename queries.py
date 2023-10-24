@@ -149,21 +149,22 @@ def ols_lookup(term, session, iri_prefix="http://purl.obolibrary.org/obo/"):
 
 
 def repr_ncbitaxon(ols_response, default=None):
-    """Turn OLS api response to string representation of a ncbi taxon.
+    """Turn OLS api response to OpenMINDS Species dict.
 
-    Looks up specific keys in the response. Builds something like
-    "Adelie penguin (Pygoscelis adeliae; NCBITaxon_9238)" if it can
-    find common name & label. Otherwise, it's just label followed by
-    term in parentheses.
+    Looks up specific keys in the response.
 
     """
     if ols_response is None:
         # 400 / 404 response, return term unchanged
         return default
 
-    name = None
-    label = ols_response.get("label")
-    short_form = ols_response.get("short_form")
+    # Create an OpenMinds species object
+    # https://openminds-documentation.readthedocs.io/en/latest/specifications/controlledTerms/species.html
+    species = {
+        "@type": "https://openminds.ebrains.eu/controlledTerms/Species",
+        "name": ols_response.get("label"),
+        "preferredOntologyIdentifier": ols_response.get("iri"),
+    }
 
     # find genbank common name that is an exact synonym
     obo_synonym = ols_response.get("obo_synonym", [])
@@ -171,29 +172,29 @@ def repr_ncbitaxon(ols_response, default=None):
         obo_synonym = [obo_synonym]
     for s in obo_synonym:
         if s.get('scope') == 'hasExactSynonym' and s.get('type') == 'genbank common name':
-            name = s.get('name')
+            species["synonym"] = s.get("name")
+            break
 
-    if name is not None:
-        return f"{name} ({label}; {short_form})"
-    else:
-        return f"{label} ({short_form})"
+    return species
 
 
 def repr_uberon(ols_response, default=None):
-    """Turn OLS api response to string representation of uberon term.
+    """Turn OLS api response to OpenMINDS Species dict.
 
-    Looks up specific keys in the response. Builds something like
-    "body proper (UBERON_0013702).
+    Looks up specific keys in the response.
 
     """
 
     if ols_response is None:
         return default
 
-    label = ols_response.get("label")
-    short_form = ols_response.get("short_form")
+    UBERONParcellation = {
+        "@type": "https://openminds.ebrains.eu/controlledTerms/UBERONParcellation",
+        "name": ols_response.get("label"),
+        "preferredOntologyIdentifier": ols_response.get("iri"),
+    }
 
-    return f"{label} ({short_form})"
+    return UBERONParcellation
 
 
 def process_ols_term(term, filter_func, session_name="query_cache"):
