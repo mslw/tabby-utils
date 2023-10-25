@@ -136,53 +136,51 @@ def process_arc(data_controller):
     return {"givenName": first, "familyName": last, "email": email}
 
 
+def process_data_controller(data_controller):
+    """Convert data controller to a dict or list of dict
+
+    Adds schema.org Person type (which means we assume all data
+    controllers to be persons) for linked data scenarios.
+
+    """
+
+    if data_controller is None:
+        return None
+    if isinstance(data_controller, list):
+        return [process_data_controller(dc) for dc in data_controller]
+
+    return {"@type": "https://schema.org/Person"} | data_controller
+
+
 def process_used_for(activity):
-    """Convert an activity-dict to a string representation
+    """Change an activity-dict to a schema.org Thing
 
-    The catalog lacks a representation for a "used-for" object that
-    has a title, description and URL (with just title mandatory). Best
-    we can do for now is to put it into additional display. To make it
-    look nicer than a standard dict rendering, we join all three
-    properties into a string.
-
-    We could make a separate additional display that used title as row
-    header, but that wouldn't look great if there was *just* the
-    title.
+    The activity coming from SFB1451-tabby has a title, description,
+    and URL. We will use a generic schema.org Thing to report these
+    properties and allow the catalog to display them nicely.
 
     """
 
     if isinstance(activity, list):
-        return [process_used_for(nth_activity) for nth_activity in activity]
+        return [process_used_for(act) for act in activity]
     if activity is None:
         return None
 
-    text = activity.get("title", "")
+    thing = {"@type": "https://schema.org/Thing"}
+    thing["name"] = activity.get("title", "")
+
+    if url := activity.get("url", False):
+        thing["url"] = url
+
     if description := activity.get("description", False):
         if type(description) is list:
             # we allowed multi-paragraph entries across columns
+            # which we now join using newlines to avoid having
+            # to add paragraphs in the catalog
             description = "\n\n".join(description)
-            # not that it matters for catalog display...
-        text = " ".join([text, "—", description])
-    if url := activity.get("url", False):
-        text = " ".join([text, f"({url})"])
-    return text
+        thing["description"] = description
 
-
-def add_used_for(d, activity):
-    """Add activity or list of activities to a dictionary
-
-    This takes care of adding one ("used for") or multiple ("used for
-    (n)") keys to a given dictionary, so that all keys are unique and
-    all activities are added.
-
-    """
-    if activity is None:
-        pass
-    if isinstance(activity, list):
-        for n in len(activity):
-            d[f"Used for ({n+1})"] = activity[n]
-    else:
-        d["Used for"] = activity
+    return thing
 
 
 def process_file(f):
@@ -213,29 +211,17 @@ def process_file(f):
     return {k: v for k, v in d.items() if v is not None}
 
 
-def reformat_sample_term(term):
-    """Reformat tabby-dataset terms for 'sample[organism]'
-    and 'sample[organism-part]' to get resolved IRI"""
-    obo = "http://purl.obolibrary.org/obo/"
-    if isinstance(term, list):
-        return [obo + t.replace(':', '_') for t in term]
-    elif isinstance(term, str):
-        return obo + term.replace(':', '_')
+def process_homepage(homepage):
+    """Return homepage as a dict or list of dict
+
+    Returned dict will contain schema.org @type (URL) for usage in
+    linked data scenarios.
+
+    """
+    if isinstance(homepage, list):
+        return [process_homepage(hp) for hp in homepage]
     else:
-        return None
-
-
-def resolve_sfb_def(term, ctx):
-    """Resolve a term definition given a context dict"""
-    definition = ctx[term]
-    if isinstance(definition, dict):
-        definition = definition['@id']
-    if definition.startswith('http'):
-        return definition
-    def_parts = definition.split(':')
-    onto = def_parts[0]
-    def_term = def_parts[1]
-    return ctx[onto] + def_term
+        return {"@type": "https://schema.org/URL", "@value": homepage}
 
 
 cat_context = {
@@ -333,13 +319,18 @@ meta_item["access_request_contact"] = process_arc(compacted.get("sfbDataControll
 # currently not using
 
 # additional display(s)
-# note: some things don't have good schema definitions for expansion,
-# so we get from either compacted or (raw) record
+# note: to avoid having to do fancy expansion tricks in the catalog to show IRIs
+# as functioning links, we are providing context explicitly here
 
 sfb_additional_content = {
-    "homepage": compacted.get("sfbHomepage"),
-    "CRC project": compacted.get("sfbProject"),
-    "data controller": compacted.get("sfbDataController"),
+    "@context": {
+        "homepage": "https://schema.org/mainEntityOfPage",
+        "data controller": "https://w3id.org/dpv#hasDataController",
+        "sample (organism)": "https://openminds.ebrains.eu/controlledTerms/Species",
+        "sample (organism part)": "https://openminds.ebrains.eu/controlledTerms/UBERONParcellation",
+        "CRC project": "https://schema.org/ResearchProject",
+        "used for": "http://www.w3.org/ns/prov#hadUsage",
+    },
     "sample (organism)": process_ols_term(
         compacted.get("sfbSampleOrganism"),
         repr_ncbitaxon,
@@ -348,13 +339,11 @@ sfb_additional_content = {
         compacted.get("sfbSamplePart"),
         repr_uberon,
     ),
+    "homepage": process_homepage(compacted.get("sfbHomepage")),
+    "data controller": process_data_controller(compacted.get("sfbDataController")),
+    "CRC project": compacted.get("sfbProject"),
+    "used for": process_used_for(compacted.get("sfbUsedFor")),
 }
-
-# there can be zero, one, or more used for:
-add_used_for(
-    d=sfb_additional_content,
-    activity=process_used_for(compacted.get("sfbUsedFor")),
-)
 
 # define an additional display tab for sfb content
 meta_item["additional_display"] = [
@@ -365,37 +354,7 @@ meta_item["additional_display"] = [
     }
 ]
 
-# add additional display definitions:
-# this specifies definitions for all fields in 'additional_display' 
-
-meta_item["additional_display_definitions"] = {
-    "SFB1451": {
-        "keys": {
-            "homepage": resolve_sfb_def("sfbHomepage", cat_context),
-            "CRC project": resolve_sfb_def("sfbProject", cat_context),
-            "data controller": {
-                "self": resolve_sfb_def("sfbDataController", cat_context),
-                "email": "https://schema.org/email",
-                "name": "https://schema.org/name"
-            },
-            "sample (organism)": resolve_sfb_def("sfbSampleOrganism", cat_context),
-            "sample (organism part)": resolve_sfb_def("sfbSamplePart", cat_context),
-            "Used for": resolve_sfb_def("sfbUsedFor", cat_context),
-        },
-        "values": {
-            "homepage": "https://schema.org/URL",
-            "CRC project": "https://schema.org/Text",
-            "data controller": {
-                "email": "https://schema.org/Text",
-                "name": "https://schema.org/Text"
-            },
-            "sample (organism)": reformat_sample_term(compacted.get("sfbSampleOrganism")),
-            "sample (organism part)": reformat_sample_term(compacted.get("sfbSamplePart")),
-            "Used for": "https://schema.org/Text"
-        }
-    }
-}
-
+# Remove empty properties from the dataset metadata
 meta_item = {k: v for k, v in meta_item.items() if v is not None}
 
 # display what would be added to the catalog
