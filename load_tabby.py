@@ -218,7 +218,9 @@ def process_homepage(homepage):
     linked data scenarios.
 
     """
-    if isinstance(homepage, list):
+    if homepage is None:
+        return None
+    elif isinstance(homepage, list):
         return [process_homepage(hp) for hp in homepage]
     else:
         return {"@type": "https://schema.org/URL", "@value": homepage}
