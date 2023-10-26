@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+import json
 from pathlib import Path
 from pprint import pprint
 
@@ -72,11 +73,11 @@ def subdataset_item(ds, tabby_path):
     )
     ds_version = compacted["version"]
 
-    return {"dataset_path": ds_path, "dataset_id": ds_id, "version": ds_version}
+    return {"dataset_path": str(ds_path), "dataset_id": ds_id, "dataset_version": ds_version}
 
 
 parser = ArgumentParser()
-parser.add_argument("ds_path", type=Path)
+parser.add_argument("ds_path", type=Path, help="Dataset to which tabby files belong")
 parser.add_argument("-c", "--catalog", type=Path, help="Catalog to add to")
 parser.add_argument("--tabby-anywhere", action="store_true", help="Search outside .datalad/tabby")
 args = parser.parse_args()
@@ -107,7 +108,7 @@ pprint(dataset_item)
 # Add to catalog if requested
 if args.catalog is not None:
     catalog_add(
-        catalog=catalog_dir,
+        catalog=args.catalog,
         metadata=json.dumps(dataset_item),
-        config_file=catalog_dir / "config.json",
+        config_file=args.catalog / "config.json",
     )
