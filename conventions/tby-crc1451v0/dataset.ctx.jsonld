@@ -2,6 +2,7 @@
   "bibo": "https://purl.org/ontology/bibo/",
   "dcterms": "https://purl.org/dc/terms/",
   "obo": "https://purl.obolibrary.org/obo/",
+  "openminds": "https://openminds.ebrains.eu/controlledTerms/",
   "prov": "http://www.w3.org/ns/prov#",
   "schema": "https://schema.org/",
   "dpv": "https://w3id.org/dpv#",
@@ -20,8 +21,8 @@
   "license": "schema:license",
   "name": "schema:name",
   "publication": "schema:citation",
-  "sample[organism]": "obo:UBERON_0000468",
-  "sample[organism-part]": "obo:UBERON_0000475",
+  "sample[organism]": "openminds:Species",
+  "sample[organism-part]": "openminds:UBERONParcellation",
   "title": "schema:title",
   "used-for": "prov:hadUsage",
   "version": "schema:version"
