@@ -230,6 +230,7 @@ cat_context = {
     "dcterms": "https://purl.org/dc/terms/",
     "nfo": "https://www.semanticdesktop.org/ontologies/2007/03/22/nfo/#",
     "obo": "https://purl.obolibrary.org/obo/",
+    "openminds": "https://openminds.ebrains.eu/controlledTerms/",
     "name": "schema:name",
     "title": "schema:title",
     "description": "schema:description",
@@ -275,8 +276,8 @@ cat_context = {
         },
     },
     "sfbProject": "schema:ResearchProject",
-    "sfbSampleOrganism": "obo:UBERON_0000468",
-    "sfbSamplePart": "obo:UBERON_0000475",
+    "sfbSampleOrganism": "openminds:Species",
+    "sfbSamplePart": "openminds:UBERONParcellation",
 }
 
 parser = ArgumentParser()
