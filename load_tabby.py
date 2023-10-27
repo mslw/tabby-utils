@@ -6,7 +6,9 @@ from urllib.parse import urlparse
 
 from datalad_tabby.io import load_tabby
 from datalad.api import catalog_add, catalog_remove, catalog_set, catalog_validate
+from datalad_next.datasets import Dataset
 from datalad_next.exceptions import IncompleteResultsError
+from datalad_next.utils import get_dataset_root
 from datalad_catalog.schema_utils import (
     get_metadata_item,
 )
@@ -357,6 +359,19 @@ meta_item["additional_display"] = [
     }
 ]
 
+# Allow for self-description
+is_tabby_self = False
+if args.tabby_path.parent.match(".datalad/tabby/self") or (
+    args.tabby_path.parent.match(".datalad/tabby")
+    and args.tabby_path.name.startswith("self")
+):
+    # take id and version from datalad
+    print("Path suggests it is a self-description of a dataset")
+    ds = Dataset(get_dataset_root(args.tabby_path))
+    meta_item["dataset_id"] = ds.id
+    meta_item["dataset_version"] = ds.repo.get_hexsha()
+    is_tabby_self = True
+
 # Remove empty properties from the dataset metadata
 meta_item = {k: v for k, v in meta_item.items() if v is not None}
 
@@ -408,7 +423,8 @@ print(dsid, dsver)
 catalog_validate(catalog=catalog_dir, metadata=json.dumps(meta_item))
 
 # If requested and present, remove existing entries for the dataset
-if args.remove_first:
+# Ignored for tabby-self which presumably is not the only source of metadata
+if args.remove_first and not is_tabby_self:
     try:
         catalog_remove(
             catalog=catalog_dir,

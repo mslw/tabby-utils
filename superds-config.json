@@ -71,8 +71,8 @@
           "datacite_gin",
           "metalad_studyminimeta",
           "bids_dataset",
-          "metalad_core",
-          "tabby"
+          "tabby",
+          "metalad_core"
         ]
       },
       "keywords": {
