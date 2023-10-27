@@ -110,5 +110,5 @@ if args.catalog is not None:
     catalog_add(
         catalog=args.catalog,
         metadata=json.dumps(dataset_item),
-        config_file=args.catalog / "config.json",
+        config_file=Path(__file__).with_name("superds-config.json"),
     )

@@ -1,0 +1,105 @@
+{
+  "catalog_name": "DataCat",
+  "logo_path": "",
+  "link_color": "#142f64",
+  "link_hover_color": "#1f99d6",
+  "social_links": {
+    "about": "https://www.crc1451.uni-koeln.de/",
+    "documentation": "https://rdm.sfb1451.de/publication-catalog/",
+    "github": null,
+    "x": "https://twitter.com/crc1451"
+  },
+  "dataset_options": {
+    "default_tab": "subdatasets",
+    "include_metadata_export": false
+  },
+  "property_sources": {
+    "dataset": {
+      "dataset_id": {
+        "rule": "single",
+        "source": "any"
+      },
+      "dataset_version": {
+        "rule": "single",
+        "source": [
+          "metalad_core",
+          "tabby"
+        ]
+      },
+      "type": {
+        "rule": "single",
+        "source": [
+          "metalad_core",
+          "tabby"
+        ]
+      },
+      "children": {
+        "rule": "merge",
+        "source": "any"
+      },
+      "name": {
+        "rule": "priority",
+        "source": [
+          "we_cff",
+          "datacite_gin",
+          "tabby",
+          "metalad_studyminimeta",
+          "bids_dataset"
+        ]
+      },
+      "short_name": {},
+      "description": {
+        "rule": "priority",
+        "source": [
+          "we_cff",
+          "datacite_gin",
+          "tabby",
+          "metalad_studyminimeta",
+          "catalog_readme",
+          "bids_dataset"
+        ]
+      },
+      "doi": {},
+      "url": {
+        "rule": "merge",
+        "source": "any"
+      },
+      "authors": {
+        "rule": "priority",
+        "source": [
+          "we_cff",
+          "datacite_gin",
+          "metalad_studyminimeta",
+          "bids_dataset",
+          "metalad_core",
+          "tabby"
+        ]
+      },
+      "keywords": {
+        "rule": "merge",
+        "source": "any"
+      },
+      "license": {},
+      "funding": {
+        "rule": "merge",
+        "source": "any"
+      },
+      "publications": {
+        "rule": "merge",
+        "source": "any"
+      },
+      "subdatasets": {
+        "rule": "merge",
+        "source": "any"
+      },
+      "additional_display": {
+        "rule": "merge",
+        "source": "any"
+      },
+      "top_display": {
+        "rule": "merge",
+        "source": "any"
+      }
+    }
+  }
+}
