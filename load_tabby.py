@@ -109,8 +109,26 @@ def process_publications(publications):
 
 def process_funding(funding):
     """Ensure that funding is an array"""
-    return [funding] if isinstance(funding, dict) else funding
+    # return [funding] if isinstance(funding, dict) else funding
+    if isinstance(funding, dict):
+        funding = [funding]
 
+    grant_list = []
+    for f in funding:
+        grant = f.copy()
+        if grant.get("funder") == "DFG":
+            grant["funder"] = "Deutsche Forschungsgemeinschaft (DFG)"
+            if grant.get("identifier").startswith("431549029-"):
+                project, _, subproject = grant.get("identifier").rpartition("-")
+                grant["name"] = "SFB 1451: Key mechanisms of motor control in health and disease"
+                grant["alternateName"] = f"SFB 1451 ({project}, {subproject} project)"
+                grant["identifier"] = f"https://gepris.dfg.de/gepris/projekt/{project}"
+            else:
+                grant["identifier"] = f"https://gepris.dfg.de/gepris/projekt/{grant.get(identifier)}"
+
+        grant_list.append(grant)
+
+    return grant_list
 
 def process_keywords(keywords):
     """Ensure that keywords are an array"""
@@ -249,7 +267,7 @@ cat_context = {
     "funding": {
         "@id": "schema:funding",
         "@context": {
-            "name": "schema:funder",
+            "funder": "schema:funder",
             "identifier": "schema:identifier",
         },
     },
@@ -298,6 +316,7 @@ record = load_tabby(
 
 expanded = jsonld.expand(record)
 compacted = jsonld.compact(record, ctx=cat_context)
+pprint(compacted.get("funding"))
 
 # Use catalog schema_utils to get base structure of metadata item
 meta_item = get_metadata_item(
