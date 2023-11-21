@@ -289,12 +289,20 @@ parser.add_argument("tabby_path", type=Path, help="Path to the tabby-dataset fil
 parser.add_argument("-c", "--catalog", type=Path, help="Catalog to add to")
 parser.add_argument("--set-as-super", action="store_true")
 parser.add_argument("--remove-first", action="store_true")
+parser.add_argument("--encoding", help="encoding to use when loading tabby")
 args = parser.parse_args()
 
-record = load_tabby(
-    args.tabby_path,  # projects/project-a/example-record/dataset@tby-crc1451v0.tsv
-    cpaths=[Path(__file__).parent / "conventions"],
-)
+if args.encoding:
+    record = load_tabby(
+        args.tabby_path,
+        cpaths=[Path(__file__).parent / "conventions"],
+        encoding=args.encoding,
+    )
+else:
+    record = load_tabby(
+        args.tabby_path,
+        cpaths=[Path(__file__).parent / "conventions"],
+    )
 
 expanded = jsonld.expand(record)
 compacted = jsonld.compact(record, ctx=cat_context)
