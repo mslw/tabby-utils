@@ -108,8 +108,18 @@ def process_publications(publications):
 
 
 def process_funding(funding):
-    """Ensure that funding is an array"""
-    # return [funding] if isinstance(funding, dict) else funding
+    """Edit funding item(s), return an array
+
+    Ensure that funding is an array. Edit DFG funding to spell out
+    Deutsche Forschungsgemeinschaft and build a gepris url from the
+    identifier. For SFB1451, populate additional fields based on the
+    identifier (assuming 431549029-<project> format).
+
+    Each funding element will have a @type: https://schema.org/Grant,
+    so that we can apply custom rules in catalog template.
+
+    """
+
     if isinstance(funding, dict):
         funding = [funding]
 
@@ -125,6 +135,9 @@ def process_funding(funding):
                 grant["identifier"] = f"https://gepris.dfg.de/gepris/projekt/{project}"
             else:
                 grant["identifier"] = f"https://gepris.dfg.de/gepris/projekt/{grant.get(identifier)}"
+
+        # replace compact IRI with a full IRI
+        grant["@type"] = grant.get("@type", "").replace("schema:", "https://schema.org/")
 
         grant_list.append(grant)
 
@@ -316,7 +329,6 @@ record = load_tabby(
 
 expanded = jsonld.expand(record)
 compacted = jsonld.compact(record, ctx=cat_context)
-pprint(compacted.get("funding"))
 
 # Use catalog schema_utils to get base structure of metadata item
 meta_item = get_metadata_item(
