@@ -8,7 +8,7 @@ from datalad_next.datasets import Dataset
 def transform_result(res):
     """Transform status result to get required information
 
-    Transformed result contais relative path, size in bytes, and
+    Transformed result contains relative path, size in bytes, and
     optionally md5sum. Keys match the sfb1451 tabby specification.
 
     """

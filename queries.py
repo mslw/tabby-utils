@@ -110,7 +110,7 @@ def query_crossref(doi, session, email="m.szczepanik@fz-juelich.de"):
             author["identifiers"] = [
                 {"name": "ORCID", "identifier": orcid},
         ]
-        # TODO: e-mail is required in the catalog shema dshgafhfadasfhdsgjfgasdjfgasdj!!!
+        # TODO: e-mail is required in the catalog schema dshgafhfadasfhdsgjfgasdjfgasdj!!!
         authors.append(author)
 
     pub["authors"] = authors
