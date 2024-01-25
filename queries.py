@@ -76,48 +76,46 @@ CAT_AUTHOR = {
 
 # title = attrs.get("titles")[0].get("title")
 
+def query_doi_org(doi, session_name="query_cache", useragent=None):
+    """Perform a doi query at doi.org
 
+    Queries doi.org about a given doi, using content negotiation to
+    request CSL json. This should get redirected to crossref,
+    datacite, or medra.
 
-def query_crossref(doi, session, email="m.szczepanik@fz-juelich.de"):
+    See: https://citation.crosscite.org/docs.html
+
+    """
+
+    session = requests_cache.CachedSession(session_name)
+
+    headers = {"Accept": "application/vnd.citationstyles.csl+json"}
+    if useragent is not None:
+        headers["User-Agent"] = useragent
 
     r = session.get(
-        url = f"https://api.crossref.org/works/{doi}?mailto={email}",
-        expire_after=timedelta(hours=1)
+        url=f"https://doi.org/{doi}",
+        headers=headers,
     )
 
-    if r.status_code != 200:
+    if not r.ok:
         return None
 
-    d = json.loads(r.text)
-    msg = d['message']
-
+    res = r.json()
     pub = {
-        "type": msg.get('type'),  # prob. journal-article  # required
-        "title": msg.get('title')[0], # required
-        "doi": msg.get('DOI'), # 10.nnnn/...  # required
-        "datePublished": msg.get('issued', {}).get('date-parts', [[None]])[0][0],  # earliest of published-[print,online]
-        "publicationOutlet": msg.get('container-title', [None])[0] # not required
+        "type": res.get("type"),  # prob. journal-article  # required
+        "title": res.get("title"),  # required
+        "doi": res.get("DOI"),  # required
+        # earliest of published-[print,online]
+        "datePublished": res.get("issued", {}).get("date-parts", [[None]])[0][0],
+        "publicationOutlet": res.get("container-title"),
+        "authors": [
+            {"givenName": x.get("given"), "familyName": x.get("family")}
+            for x in res.get("author")
+        ],
     }
 
-    authors = []
-    for a in msg.get('author'):
-        ca = jsonld.compact(a, ctx=CAT_AUTHOR, options={'expandContext': CROSSREF_AUTHOR})
-        # drop @context and keys not defined for catalog
-        author = {k:v for k,v in ca.items() if k in CAT_AUTHOR.keys()}
-        # fold in orcid (see load_tabby.process_author)
-        # see load_tabby:process_authors.py
-        if orcid := author.pop("orcid", False):
-            author["identifiers"] = [
-                {"name": "ORCID", "identifier": orcid},
-        ]
-        # TODO: e-mail is required in the catalog shema dshgafhfadasfhdsgjfgasdjfgasdj!!!
-        authors.append(author)
-
-    pub["authors"] = authors
-
     return pub
-
-# pprint(query_crossref("10.1371/journal.pone.0090081", session, email))
 
 
 def ols_lookup(term, session, iri_prefix="http://purl.obolibrary.org/obo/"):

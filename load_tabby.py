@@ -17,6 +17,7 @@ from pyld import jsonld
 
 from queries import (
     process_ols_term,
+    query_doi_org,
     repr_ncbitaxon,
     repr_uberon,
 )
@@ -95,13 +96,23 @@ def process_publications(publications):
 
     res = []
     for publication in publications:
-        citation = publication.pop("citation", None)
 
+        # use doi to get metadata, if given
+        if (doi := publication.get("doi")) is not None:
+            if not doi.startswith("http"):
+                doi = f"https://doi.org/{doi}"
+            pub = query_doi_org(doi)
+            if pub is not None:
+                res.append(pub)
+                continue
+
+        # otherwise (or if doi didn't resolve) rely on other fields
+        # moving the entire citation into title
+        citation = publication.pop("citation", None)
         if citation is not None:
             publication["title"] = citation
             publication["authors"] = []
 
-        # todo: doi lookup
         res.append(publication)
 
     return res
