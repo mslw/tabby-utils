@@ -115,6 +115,10 @@ def query_doi_org(doi, session_name="query_cache", useragent=None):
         ],
     }
 
+    if not pub["doi"].startswith("http"):
+        # pretty sure it's always without doi.org part
+        pub["doi"] = "https://doi.org/" + pub["doi"]
+
     return pub
 
 
