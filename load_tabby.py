@@ -239,6 +239,34 @@ def process_homepage(homepage):
         return {"@type": "https://schema.org/URL", "@value": homepage}
 
 
+def process_homepage_as_url(homepage):
+    """Return homepages which can serve as a clone URL
+
+    Returns a list with homepage(s) which point to GIN, GitHub, or
+    JuGit. It returns a list (or None) because of
+    github.com/psychoinformatics-de/sfb1451-projects-catalog/issues/88
+
+    """
+    known_locations = {
+        "gin.g-node.org",
+        "github.com",
+        "gitlab.com",
+        "jugit.fz-juelich.de",
+    }
+    if homepage is None:
+        return None
+    elif isinstance(homepage, str):
+        return process_homepage_as_url([homepage])
+    else:
+        # it's a list
+        url = []
+        for hp in homepage:
+            hp_parsed = urlparse(hp)
+            if hp_parsed.netloc in known_locations and hp_parsed.path != "":
+                url.append(hp)
+        return url if len(url) > 0 else None
+
+
 cat_context = {
     "schema": "https://schema.org/",
     "bibo": "https://purl.org/ontology/bibo/",
@@ -390,6 +418,13 @@ if args.tabby_path.parent.match(".datalad/tabby/self") or (
     meta_item["dataset_id"] = ds.id
     meta_item["dataset_version"] = ds.repo.get_hexsha()
     is_tabby_self = True
+
+# Allow for using homepage as (clone) URL. SFB tabby format currently
+# has no concept of clone URL but in some cases (e.g. gin) a homepage
+# can be interpreted as such. This would allow the catalog to display
+# "Download with DataLad" & "View on ..." buttons
+if (clone_hp := process_homepage_as_url(compacted.get("sfbHomepage"))) is not None:
+    meta_item["url"] = clone_hp
 
 # Remove empty properties from the dataset metadata
 meta_item = {k: v for k, v in meta_item.items() if v is not None}
