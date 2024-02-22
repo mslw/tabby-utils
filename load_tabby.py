@@ -176,7 +176,8 @@ def process_funding(funding, lookup={}):
                     parentgrant = None
             else:
                 # DFG but not SFB1451, only edit identifier
-                grant["identifier"] = f"https://gepris.dfg.de/gepris/projekt/{grant.get(identifier)}"
+                project = grant.get("identifier")
+                grant["identifier"] = f"https://gepris.dfg.de/gepris/projekt/{project}"
 
         if parentgrant is not None:
             grant_list.append(parentgrant)
