@@ -1,0 +1,95 @@
+[funding]
+
+[funding.sfb1451]
+funder = "Deutsche Forschungsgemeinschaft (DFG)"
+name = "SFB 1451: Key mechanisms of motor control in health and disease"
+identifier = "https://gepris.dfg.de/gepris/projekt/431549029"
+"@type" = "https://schema.org/Grant"
+
+[funding.A01]
+name = "Understanding plastin 3 and its interactors in motor neuron function and plasticity in health and disease"
+identifier = "https://gepris.dfg.de/gepris/projekt/458620544"
+
+[funding.A02]
+name = "Dysregulation of the autophagy-endolysosomal system as a putative pathological mechanism behind the motor control dysfunction"
+identifier = "https://gepris.dfg.de/gepris/projekt/458627899"
+
+[funding.A03]
+name = "Motor learning-induced plasticity of cerebellar Purkinje neuron connectivity"
+identifier = "https://gepris.dfg.de/gepris/projekt/458628816"
+
+[funding.A04]
+name = "The role of the reward system in obesity- and ageing-associated changes of motor behaviours"
+identifier = "https://gepris.dfg.de/gepris/projekt/458630481"
+
+[funding.A05]
+name = "Neural mechanisms underlying motor flexibility in fruit fly walking"
+identifier = "https://gepris.dfg.de/gepris/projekt/458631052"
+
+[funding.A06]
+name = "Sensory-motor pathways controlling voluntary movements in health and disease"
+identifier = "https://gepris.dfg.de/gepris/projekt/458633663"
+
+[funding.A07]
+name = "Role of synaptic lipid modulated cortical excitability in motor control"
+identifier = "https://gepris.dfg.de/gepris/projekt/470703892"
+
+[funding.B01]
+name = "Developmental mechanisms affecting motor skills and motor control"
+identifier = "https://gepris.dfg.de/gepris/projekt/458636148"
+
+[funding.B02]
+name = "Neural network maturation underlying top-down motor control and movement initiation in childhood and adolescence"
+identifier = "https://gepris.dfg.de/gepris/projekt/458637144"
+
+[funding.B03]
+name = "Modelling neural network dynamics underlying movements in health and disease"
+identifier = "https://gepris.dfg.de/gepris/projekt/458638358"
+
+[funding.B04]
+name = "Motor control under uncertainty in the healthy human brain"
+identifier = "https://gepris.dfg.de/gepris/projekt/458639706"
+
+[funding.B05]
+name = "Single-case predictions of motor abilities in health and disease"
+identifier = "https://gepris.dfg.de/gepris/projekt/458640473"
+
+[funding.C01]
+name = "Identification and selective stimulation of motor recovery-related functional networks after experimental stroke"
+identifier = "https://gepris.dfg.de/gepris/projekt/458642074"
+
+[funding.C03]
+name = "Striatal dopamine and volitional motor control: vigour, planning, and incentive salience "
+identifier = "https://gepris.dfg.de/gepris/projekt/458646297"
+
+[funding.C04]
+name = "Apraxia in Alzheimer’s disease: Plastic reorganization of praxis networks in response to chronically progressive dysfunction"
+identifier = "https://gepris.dfg.de/gepris/projekt/458674749"
+
+[funding.C05]
+name = "Reorganisation of the motor system following stroke"
+identifier = "https://gepris.dfg.de/gepris/projekt/458684554"
+
+[funding.C06]
+name = "Major depression as a transient functional lesion model of motor control"
+identifier = "https://gepris.dfg.de/gepris/projekt/458685554"
+
+[funding.C07]
+name = "Neural networks underlying motor tic formation and suppression"
+identifier = "https://gepris.dfg.de/gepris/projekt/458687122"
+
+[funding.INF]
+name = "Data Managment"
+identifier = "https://gepris.dfg.de/gepris/projekt/458705875"
+
+[funding.Z01]
+name = "Central Office"
+identifier = "https://gepris.dfg.de/gepris/projekt/458691909"
+
+[funding.Z02]
+name = "Animal Motor Core Facility"
+identifier = "https://gepris.dfg.de/gepris/projekt/458701226"
+
+[funding.Z03]
+name = "Humanes Motor-Assesment Center"
+identifier = "https://gepris.dfg.de/gepris/projekt/458705014"
