@@ -18,6 +18,7 @@ import tomli
 
 from queries import (
     process_ols_term,
+    query_doi_org,
     repr_ncbitaxon,
     repr_uberon,
 )
@@ -96,13 +97,23 @@ def process_publications(publications):
 
     res = []
     for publication in publications:
-        citation = publication.pop("citation", None)
 
+        # use doi to get metadata, if given
+        if (doi := publication.get("doi")) is not None:
+            if not doi.startswith("http"):
+                doi = f"https://doi.org/{doi}"
+            pub = query_doi_org(doi)
+            if pub is not None:
+                res.append(pub)
+                continue
+
+        # otherwise (or if doi didn't resolve) rely on other fields
+        # moving the entire citation into title
+        citation = publication.pop("citation", None)
         if citation is not None:
             publication["title"] = citation
             publication["authors"] = []
 
-        # todo: doi lookup
         res.append(publication)
 
     return res
@@ -290,6 +301,34 @@ def process_homepage(homepage):
         return {"@type": "https://schema.org/URL", "@value": homepage}
 
 
+def process_homepage_as_url(homepage):
+    """Return homepages which can serve as a clone URL
+
+    Returns a list with homepage(s) which point to GIN, GitHub, or
+    JuGit. It returns a list (or None) because of
+    github.com/psychoinformatics-de/sfb1451-projects-catalog/issues/88
+
+    """
+    known_locations = {
+        "gin.g-node.org",
+        "github.com",
+        "gitlab.com",
+        "jugit.fz-juelich.de",
+    }
+    if homepage is None:
+        return None
+    elif isinstance(homepage, str):
+        return process_homepage_as_url([homepage])
+    else:
+        # it's a list
+        url = []
+        for hp in homepage:
+            hp_parsed = urlparse(hp)
+            if hp_parsed.netloc in known_locations and hp_parsed.path != "":
+                url.append(hp)
+        return url if len(url) > 0 else None
+
+
 cat_context = {
     "schema": "https://schema.org/",
     "bibo": "https://purl.org/ontology/bibo/",
@@ -351,6 +390,7 @@ parser.add_argument("tabby_path", type=Path, help="Path to the tabby-dataset fil
 parser.add_argument("-c", "--catalog", type=Path, help="Catalog to add to")
 parser.add_argument("--set-as-super", action="store_true")
 parser.add_argument("--remove-first", action="store_true")
+parser.add_argument("--encoding", help="encoding to use when loading tabby")
 args = parser.parse_args()
 
 # Load manually entered lookup tables
@@ -359,10 +399,17 @@ with Path(__file__).with_name("lookup_tables.toml").open("rb") as f:
 grant_lut = lookup_tables["funding"]
 
 # Load the tabby record
-record = load_tabby(
-    args.tabby_path,  # projects/project-a/example-record/dataset@tby-crc1451v0.tsv
-    cpaths=[Path(__file__).parent / "conventions"],
-)
+if args.encoding:
+    record = load_tabby(
+        args.tabby_path,
+        cpaths=[Path(__file__).parent / "conventions"],
+        encoding=args.encoding,
+    )
+else:
+    record = load_tabby(
+        args.tabby_path,
+        cpaths=[Path(__file__).parent / "conventions"],
+    )
 
 expanded = jsonld.expand(record)
 compacted = jsonld.compact(record, ctx=cat_context)
@@ -439,6 +486,13 @@ if args.tabby_path.parent.match(".datalad/tabby/self") or (
     meta_item["dataset_id"] = ds.id
     meta_item["dataset_version"] = ds.repo.get_hexsha()
     is_tabby_self = True
+
+# Allow for using homepage as (clone) URL. SFB tabby format currently
+# has no concept of clone URL but in some cases (e.g. gin) a homepage
+# can be interpreted as such. This would allow the catalog to display
+# "Download with DataLad" & "View on ..." buttons
+if (clone_hp := process_homepage_as_url(compacted.get("sfbHomepage"))) is not None:
+    meta_item["url"] = clone_hp
 
 # Remove empty properties from the dataset metadata
 meta_item = {k: v for k, v in meta_item.items() if v is not None}
