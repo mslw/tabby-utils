@@ -14,6 +14,7 @@ from datalad_catalog.schema_utils import (
 )
 
 from pyld import jsonld
+import tomli
 
 from queries import (
     process_ols_term,
@@ -107,13 +108,18 @@ def process_publications(publications):
     return res
 
 
-def process_funding(funding):
+def process_funding(funding, lookup={}):
     """Edit funding item(s), return an array
 
     Ensure that funding is an array. Edit DFG funding to spell out
     Deutsche Forschungsgemeinschaft and build a gepris url from the
     identifier. For SFB1451, populate additional fields based on the
     identifier (assuming 431549029-<project> format).
+
+    If the identified SFB project can be found in the lookup dict
+    provided, two items will be produced: one for the main SFB1451
+    grant, and one for the SFB project (for the latter, name and
+    identifier will be taken from the lookup dict).
 
     Each funding element will have a @type: https://schema.org/Grant,
     so that we can apply custom rules in catalog template.
@@ -126,22 +132,47 @@ def process_funding(funding):
     grant_list = []
     for f in funding:
         grant = f.copy()
+        parentgrant = None
+
+        # replace compact IRI with a full IRI
+        grant["@type"] = grant.get("@type", "").replace(
+            "schema:", "https://schema.org/"
+        )
+
         if grant.get("funder") == "DFG":
             grant["funder"] = "Deutsche Forschungsgemeinschaft (DFG)"
             if grant.get("identifier").startswith("431549029-"):
+                # one of ours (SFB1451)
                 project, _, subproject = grant.get("identifier").rpartition("-")
-                grant["name"] = "SFB 1451: Key mechanisms of motor control in health and disease"
-                grant["alternateName"] = f"SFB 1451 ({project}, {subproject} project)"
-                grant["identifier"] = f"https://gepris.dfg.de/gepris/projekt/{project}"
+
+                # main grant
+                parentgrant = {
+                    "funder": "Deutsche Forschungsgemeinschaft (DFG)",
+                    "name": "SFB 1451: Key mechanisms of motor control in health and disease",
+                    "identifier": "https://gepris.dfg.de/gepris/projekt/431549029",
+                    "@type": "https://schema.org/Grant",
+                }
+
+                # subproject grant - look up ID & title copied from gepris
+                gepris_info = lookup.get(subproject.upper())
+                if gepris_info is not None:
+                    grant["name"] = gepris_info["name"]
+                    grant["identifier"] = gepris_info["identifier"]
+                    grant["alternateName"] = subproject.upper()
+                    grant["isPartOf"] = f"https://gepris.dfg.de/gepris/projekt/{project}"
+                else:
+                    grant = parentgrant
+                    parentgrant = None
             else:
+                # DFG but not SFB1451, only edit identifier
                 grant["identifier"] = f"https://gepris.dfg.de/gepris/projekt/{grant.get(identifier)}"
 
-        # replace compact IRI with a full IRI
-        grant["@type"] = grant.get("@type", "").replace("schema:", "https://schema.org/")
-
+        if parentgrant is not None:
+            grant_list.append(parentgrant)
         grant_list.append(grant)
 
     return grant_list
+
 
 def process_keywords(keywords):
     """Ensure that keywords are an array"""
@@ -322,6 +353,12 @@ parser.add_argument("--set-as-super", action="store_true")
 parser.add_argument("--remove-first", action="store_true")
 args = parser.parse_args()
 
+# Load manually entered lookup tables
+with Path(__file__).with_name("lookup_tables.toml").open("rb") as f:
+    lookup_tables = tomli.load(f)
+grant_lut = lookup_tables["funding"]
+
+# Load the tabby record
 record = load_tabby(
     args.tabby_path,  # projects/project-a/example-record/dataset@tby-crc1451v0.tsv
     cpaths=[Path(__file__).parent / "conventions"],
@@ -345,7 +382,7 @@ meta_item["description"] = compacted.get("description")
 meta_item["doi"] = compacted.get("doi")
 meta_item["authors"] = process_authors(compacted.get("authors"))
 meta_item["keywords"] = process_keywords(compacted.get("keywords"))
-meta_item["funding"] = process_funding(compacted.get("funding"))
+meta_item["funding"] = process_funding(compacted.get("funding"), lookup=grant_lut)
 meta_item["publications"] = process_publications(compacted.get("publications"))
 meta_item["access_request_contact"] = process_arc(compacted.get("sfbDataController"))
 
