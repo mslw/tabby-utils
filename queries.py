@@ -169,7 +169,10 @@ def repr_ncbitaxon(ols_response, default=None):
     }
 
     # find genbank common name that is an exact synonym
-    obo_synonym = ols_response.get("obo_synonym", [])
+    obo_synonym = ols_response.get("obo_synonym")
+    if obo_synonym is None:
+        # key present but value empty, or key missing
+        obo_synonym = []
     if isinstance(obo_synonym, dict):
         obo_synonym = [obo_synonym]
     for s in obo_synonym:
