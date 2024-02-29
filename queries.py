@@ -27,7 +27,6 @@ def get_doi_id(doi):
     return id
 
 
-
 CROSSREF_AUTHOR = {
     "schema": "https://schema.org/",
     "ORCID": "https://purl.obolibrary.org/IAO_0000708",
@@ -47,34 +46,6 @@ CAT_AUTHOR = {
     "honorificSuffix": "https://schema.org/honorificSuffix"
 }
 
-
-
-# session = requests_cache.CachedSession('query_cache')
-
-# email = "m.szczepanik@fz-juelich.de"
-# doi = "10.14454/FXWS-0523"  # datacite
-
-# https://www.crossref.org/documentation/retrieve-metadata/xml-api/doi-to-metadata-query/
-# r = session.get(
-#     #url=f"https://doi.crossref.org/servlet/query?pid={email}&format=unixref&id={doi}",
-#     #url = f"https://api.crossref.org/works/{doi}/agency?mailto={email}",
-#     url = f"https://api.crossref.org/works/{doi}?mailto={email}",
-#     expire_after=timedelta(hours=1)
-# )
-
-
-# r = session.get(
-#         url = f"https://api.datacite.org/dois/{doi}",
-#         expire_after=timedelta(hours=1)
-#     )
-
-# d = json.loads(r.text)
-# data = d.get("data")
-# attrs = data.get("attributes")
-
-# doi = data.get("id")
-
-# title = attrs.get("titles")[0].get("title")
 
 def query_doi_org(doi, session_name="query_cache", useragent=None):
     """Perform a doi query at doi.org
@@ -219,7 +190,3 @@ def process_ols_term(term, filter_func, session_name="query_cache"):
         return filter_func(ols_lookup(term, session), term)
     else:
         return None
-
-# pprint(process_ols_term("NCBITaxon:9238", repr_ncbitaxon))
-# pprint(process_ols_term("UBERON:0013702", repr_uberon))
-# pprint(process_ols_term(["NCBITaxon:9238", "NCBITaxon:30457"], repr_ncbitaxon))
