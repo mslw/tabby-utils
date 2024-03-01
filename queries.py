@@ -47,7 +47,7 @@ CAT_AUTHOR = {
 }
 
 
-def query_doi_org(doi, session_name="query_cache", useragent=None):
+def query_doi_org(doi, session_name="tabby-utils-queries", useragent=None):
     """Perform a doi query at doi.org
 
     Queries doi.org about a given doi, using content negotiation to
@@ -58,7 +58,7 @@ def query_doi_org(doi, session_name="query_cache", useragent=None):
 
     """
 
-    session = requests_cache.CachedSession(session_name)
+    session = requests_cache.CachedSession(session_name, use_cache_dir=True)
 
     headers = {"Accept": "application/vnd.citationstyles.csl+json"}
     if useragent is not None:
@@ -173,7 +173,7 @@ def repr_uberon(ols_response, default=None):
     return UBERONParcellation
 
 
-def process_ols_term(term, filter_func, session_name="query_cache"):
+def process_ols_term(term, filter_func, session_name="tabby-utils-queries"):
     """Query OLS api and return nice representations
 
     Runs an OLS API query for the given term and applies filter_func
@@ -182,7 +182,7 @@ def process_ols_term(term, filter_func, session_name="query_cache"):
     responses.
 
     """
-    session = requests_cache.CachedSession(session_name)
+    session = requests_cache.CachedSession(session_name, use_cache_dir=True)
 
     if isinstance(term, list):
         return [filter_func(ols_lookup(t, session), t) for t in term]
