@@ -4,6 +4,7 @@ from urllib.parse import urlparse, urljoin, quote as urlquote
 import warnings
 import xml.etree.ElementTree as ET
 
+from lxml import html
 from pyld import jsonld
 import requests_cache
 
@@ -47,6 +48,24 @@ CAT_AUTHOR = {
 }
 
 
+def author_from_csl(author):
+    """Translate (parts of) author from CSL to catalog
+
+    Currently only takes name components that are present (note: a
+    person has givenName and familyName, an organization just name).
+
+    """
+    d = {
+        "givenName": author.get("given"),
+        "familyName": author.get("family"),
+        "name": author.get("name"),
+    }
+    return {k: v for k, v in d.items() if v is not None}
+
+def dehtmlize(s):
+    """Remove html formatting from string"""
+    return html.fromstring(s).text_content()
+
 def query_doi_org(doi, session_name="tabby-utils-queries", useragent=None):
     """Perform a doi query at doi.org
 
@@ -75,14 +94,13 @@ def query_doi_org(doi, session_name="tabby-utils-queries", useragent=None):
     res = r.json()
     pub = {
         "type": res.get("type"),  # prob. journal-article  # required
-        "title": res.get("title"),  # required
+        "title": dehtmlize(res.get("title")),  # required
         "doi": res.get("DOI"),  # required
         # earliest of published-[print,online]
         "datePublished": res.get("issued", {}).get("date-parts", [[None]])[0][0],
         "publicationOutlet": res.get("container-title"),
         "authors": [
-            {"givenName": x.get("given"), "familyName": x.get("family")}
-            for x in res.get("author")
+            author_from_csl(x) for x in res.get("author")
         ],
     }
 
