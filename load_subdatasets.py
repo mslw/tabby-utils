@@ -87,6 +87,9 @@ ds = Dataset(args.ds_path)
 
 subdatasets = []
 for tabby_path in list_tabby_ds_files(ds, anywhere=args.tabby_anywhere):
+    if tabby_path.parent.parts[-3:] == (".datalad", "tabby", "self"):
+        # skip self-description
+        continue
     subdatasets.append(subdataset_item(ds, tabby_path))
 
 # Early exit if nothing to do
