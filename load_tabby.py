@@ -74,6 +74,15 @@ def process_license(license):
     return {"name": license, "url": license}
 
 
+def process_doi(doi):
+    """Ensure the DOI is in its URL form"""
+
+    if doi is None:
+        return None
+
+    return doi if doi.startswith("http") else f"https://doi.org/{doi}"
+
+
 def process_publications(publications):
     """Convert publication to catalog-schema object
 
@@ -427,7 +436,7 @@ meta_item = get_metadata_item(
 meta_item["name"] = compacted.get("title")
 meta_item["license"] = process_license(compacted.get("license"))
 meta_item["description"] = compacted.get("description")
-meta_item["doi"] = compacted.get("doi")
+meta_item["doi"] = process_doi(compacted.get("doi"))
 meta_item["authors"] = process_authors(compacted.get("authors"))
 meta_item["keywords"] = process_keywords(compacted.get("keywords"))
 meta_item["funding"] = process_funding(compacted.get("funding"), lookup=grant_lut)
