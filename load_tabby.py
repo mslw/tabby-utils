@@ -18,6 +18,8 @@ import tomli
 
 from queries import (
     process_ols_term,
+    query_agency,
+    query_crossref_xml,
     query_doi_org,
     repr_ncbitaxon,
     repr_uberon,
@@ -115,6 +117,16 @@ def process_publications(publications):
             if pub is not None:
                 res.append(pub)
                 continue
+
+            # crossref xml API fallback: in rare cases their APIs can misalign
+            if query_agency(doi) == "Crossref":
+                try:
+                    pub = query_crossref_xml(doi)
+                except NotImplementedError:
+                    warnings.warn(f"Crossref translation not implemented for {doi}")
+                if pub is not None:
+                    res.append(pub)
+                    continue
 
         # otherwise (or if doi didn't resolve) rely on other fields
         # moving the entire citation into title

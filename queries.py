@@ -1,5 +1,7 @@
 from datetime import timedelta
 import json
+import re
+import subprocess
 from urllib.parse import urlparse, urljoin, quote as urlquote
 import warnings
 import xml.etree.ElementTree as ET
@@ -109,6 +111,128 @@ def query_doi_org(doi, session_name="tabby-utils-queries", useragent=None):
         pub["doi"] = "https://doi.org/" + pub["doi"]
 
     return pub
+
+
+def query_agency(doi, session_name="tabby-utils-queries"):
+    """Query doi.org about registration agency"""
+
+    session = requests_cache.CachedSession(session_name, use_cache_dir=True)
+
+    if doi.startswith("http"):
+        r = session.get(doi.replace("doi.org/", "doi.org/ra/"))
+    else:
+        r = session.get(f"https://doi.org/ra/{doi}")
+
+    return r.json()[0]["RA"] if r.ok else None
+
+
+def query_crossref_xml(doi, session_name="tabby-utils-queries", email=None):
+    """Perform a DOI to metadata query in Crossref's XML API"""
+
+    session = requests_cache.CachedSession(session_name, use_cache_dir=True)
+
+    doi = doi.replace("https://doi.org/", "")  # we want plain doi
+
+    if email is None:
+        # email is needed to query the API, we fill in from git config
+        # we can reasonably expect one to be present, so not handling errors
+        sp_git = subprocess.run(
+            ["git", "config", "user.email"], capture_output=True, text=True
+        )
+        email = sp_git.stdout.rstrip()
+
+    r = session.get(
+        "https://doi.crossref.org/servlet/query",
+        params={"pid": email, "format": "unixref", "id": doi},
+    )
+
+    if not r.ok:
+        return None
+
+    root = ET.fromstring(r.text)
+
+    # pick returned element and translate to be catalog-compatible
+    elem = root.find("doi_record/crossref/")  # / at the end means child
+    if elem.tag == "journal":
+        return unixref_journal(elem)
+    else:
+        raise NotImplementedError(f"No parser implemented for {elem.tag}")
+
+    return root
+
+
+def unixref_journal(elem):
+    """Translate journal (article) from UNIXREF to catalog
+
+    Takes XML journal element (which combines journal_metadata and
+    journal_article) and returns a catalog-compatible dict. Uses
+    XPaths to select the required elements.
+
+    See:
+    https://data.crossref.org/reports/help/schema_doc/unixref1.1/unixref1.1.html
+
+    """
+
+    publication = {"type": "journal-article"}
+
+    if (title := elem.find("journal_article/titles/title")) is not None:
+        publication["title"] = title.text
+
+    if (doi := elem.find("journal_article/doi_data/doi")) is not None:
+        # this should be guaranteed to exist
+        if doi.text.startswith("http"):
+            publication["doi"] = doi.text
+        else:
+            publication["doi"] = f"https://doi.org/{doi.text}"
+
+    # let's try to favour print date, otherwise take first available
+    datePublished = elem.find(
+        "journal_article/publication_date[@media_type='print']/year"
+    )
+    if datePublished is None:
+        datePublished = elem.find("journal_article/publication_date/year")
+
+    if datePublished is not None:
+        # this should be guaranteed to exist
+        publication["datePublished"] = datePublished.text
+
+    if (
+        publicationOutlet := elem.find("journal/journal_metadata/full_title")
+    ) is not None:
+        publication["publicationOutlet"] = publicationOutlet.text
+
+    contributors = elem.find("journal_article/contributors")
+    if contributors is not None:
+        authors = []
+        for c in contributors:
+            if c.tag == "person_name":
+                author = {}
+                if (givenName := c.find("given_name")) is not None:
+                    author["givenName"] = givenName.text
+                if (familyName := c.find("surname")) is not None:
+                    author["familyName"] = familyName.text
+                if (honorificSuffix := c.find("suffix")) is not None:
+                    author["honorificSuffix"] = honorificSuffix.text
+                if (orcid := c.find("ORCID")) is not None:
+                    id_part = re.search(
+                        "0000-000(1-[5-9]|2-[0-9]|3-[0-4])[0-9]{3}-[0-9]{3}[0-9X]",
+                        orcid.text,
+                    ).group()
+                    author["identifiers"] = [{"type": "ORCID", "identifier": id_part}]
+            elif c.tag == "organization":
+                # simple type, retrieve text directly from element
+                author = {"name": c.text}
+            elif c.tag == "anonymous":
+                # anonymous contributor can still have afffiliation :D
+                author = {"name": "anonymous"}
+            else:
+                continue
+            authors.append(author)
+
+
+        publication["authors"] = authors
+
+    return publication
 
 
 def ols_lookup(term, session, iri_prefix="http://purl.obolibrary.org/obo/"):
