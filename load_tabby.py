@@ -17,8 +17,10 @@ from pyld import jsonld
 import tomli
 
 from queries import (
+    parse_gepris,
     process_ols_term,
     query_agency,
+    query_cordis,
     query_crossref_xml,
     query_doi_org,
     repr_ncbitaxon,
@@ -196,9 +198,19 @@ def process_funding(funding, lookup={}):
                     grant = parentgrant
                     parentgrant = None
             else:
-                # DFG but not SFB1451, only edit identifier
+                # DFG but not SFB1451
                 project = grant.get("identifier")
-                grant["identifier"] = f"https://gepris.dfg.de/gepris/projekt/{project}"
+                gepris_url = f"https://gepris.dfg.de/gepris/projekt/{project}"
+                grant["identifier"] = gepris_url
+
+                # try to look up the title online
+                if (gepris_metadata := parse_gepris(gepris_url)) is not None:
+                    grant |= gepris_metadata
+
+        if grant.get("identifier").startswith("https://cordis.europa.eu/project"):
+            # EU-funded project, query for additional metadata
+            if (cordis_metadata := query_cordis(grant.get("identifier"))) is not None:
+                grant |= cordis_metadata
 
         if parentgrant is not None:
             grant_list.append(parentgrant)

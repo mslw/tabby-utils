@@ -6,6 +6,7 @@ from urllib.parse import urlparse, urljoin, quote as urlquote
 import warnings
 import xml.etree.ElementTree as ET
 
+from bs4 import BeautifulSoup
 from lxml import html
 from pyld import jsonld
 import requests_cache
@@ -332,3 +333,59 @@ def process_ols_term(term, filter_func, session_name="tabby-utils-queries"):
         return filter_func(ols_lookup(term, session), term)
     else:
         return None
+
+
+def query_cordis(cordis_url, session_name="tabby-utils-queries"):
+    """Get grant name and acronym from CORDIS
+
+    The funder and identifier can be filled in from elsewhere
+
+    """
+
+    session = requests_cache.CachedSession(session_name, use_cache_dir=True)
+
+    r = session.get(
+        cordis_url,
+        params={"format": "xml"},
+    )
+
+    if not r.ok:
+        return None
+
+    root = ET.fromstring(r.text)
+
+    xmlns = {"cordis": "http://cordis.europa.eu"}
+
+    grant = {
+        "name": root.find("cordis:title", xmlns).text,
+        "alternateName": root.find("cordis:acronym", xmlns).text,
+    }
+
+    return grant
+
+
+def parse_gepris(gepris_url, session_name="tabby-utils-queries"):
+    """Get grant name from GEPRIS
+
+    Needs to parse html because there is no structured metadata query
+    (that I know of).
+
+    """
+
+    session = requests_cache.CachedSession(session_name, use_cache_dir=True)
+    r = session.get(
+        gepris_url,
+        params={"language": "en"},
+    )
+
+    if not r.ok:
+        return None
+
+    soup = BeautifulSoup(r.text, "html.parser")
+
+    name = soup.find("h1", class_=lambda x: x != "hidden").get_text(strip=True)
+    name = " ".join(name.split())  # get rid of nbsp, multiple spaces, newlines
+
+    grant = {"name": name}
+
+    return grant
