@@ -111,6 +111,10 @@ def query_doi_org(doi, session_name="tabby-utils-queries", useragent=None):
         # pretty sure it's always without doi.org part
         pub["doi"] = "https://doi.org/" + pub["doi"]
 
+    if pub["publicationOutlet"] == []:
+        # seen e.g. for Research Square preprints
+        pub.pop("publicationOutlet")
+
     return pub
 
 
