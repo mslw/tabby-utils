@@ -219,9 +219,27 @@ def process_funding(funding, lookup={}):
     return grant_list
 
 
-def process_keywords(keywords):
-    """Ensure that keywords are an array"""
-    return [keywords] if isinstance(keywords, str) else keywords
+def process_keywords_adding_projects(keywords, projects):
+    """Add project names to keyword, returning array or None
+
+    To enable easy findability of datasets from a given project, we
+    decided to include project names in the set of keywords.
+
+    """
+    if keywords is None:
+        keywords = []
+    if projects is None:
+        projects = []
+    if isinstance(keywords, str):
+        keywords = [keywords]
+    if isinstance(projects, str):
+        projects = [projects]
+
+    kw_set = set(keywords)
+    for project in projects:
+        kw_set.add(project.upper())
+
+    return list(kw_set) if len(kw_set) > 0 else None
 
 
 def process_arc(data_controller):
@@ -462,7 +480,9 @@ meta_item["license"] = process_license(compacted.get("license"))
 meta_item["description"] = compacted.get("description")
 meta_item["doi"] = process_doi(compacted.get("doi"))
 meta_item["authors"] = process_authors(compacted.get("authors"))
-meta_item["keywords"] = process_keywords(compacted.get("keywords"))
+meta_item["keywords"] = process_keywords_adding_projects(
+    compacted.get("keywords"), compacted.get("sfbProject")
+)
 meta_item["funding"] = process_funding(compacted.get("funding"), lookup=grant_lut)
 meta_item["publications"] = process_publications(compacted.get("publications"))
 meta_item["access_request_contact"] = process_arc(compacted.get("sfbDataController"))
