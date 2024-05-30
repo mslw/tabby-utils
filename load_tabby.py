@@ -110,7 +110,6 @@ def process_publications(publications):
 
     res = []
     for publication in publications:
-
         # use doi to get metadata, if given
         if (doi := publication.get("doi")) is not None:
             if not doi.startswith("http"):
@@ -136,6 +135,7 @@ def process_publications(publications):
         if citation is not None:
             publication["title"] = citation
             publication["authors"] = []
+            publication["doi"] = ""
 
         res.append(publication)
 
