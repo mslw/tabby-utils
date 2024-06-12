@@ -114,7 +114,7 @@ def query_doi_org(doi, session_name="tabby-utils-queries", useragent=None):
     if pub["publicationOutlet"] == []:
         # seen e.g. for Research Square preprints
         pub.pop("publicationOutlet")
-    if pub["publicationOutlet"] is None:
+    elif pub["publicationOutlet"] is None:
         # property was not present - e.g. from Datacite / refubium
         pub.pop("publicationOutlet")
 
